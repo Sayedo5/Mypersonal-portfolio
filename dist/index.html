@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#000000" />
 
@@ -35,11 +35,31 @@
     />
     <meta name="twitter:image" content="https://sayedmuhammad.dev/og-image.png" />
 
+    <!--
+      Resolve the theme before first paint so there is no flash of the
+      wrong colours. Runs synchronously, ahead of the stylesheet.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('portfolio-theme');
+          var theme =
+            stored ||
+            (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', theme === 'light' ? '#F5F1E8' : '#000000');
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+
     <!-- Fonts: preconnect first so there is no layout shift -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Herr+Von+Muellerhoff&family=Allura&family=Montserrat:wght@200;300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Herr+Von+Muellerhoff&family=JetBrains+Mono:wght@400;500;600&family=Montserrat:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
@@ -85,8 +105,8 @@
         ]
       }
     </script>
-    <script type="module" crossorigin src="/assets/index-D08v4z2v.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BYsESay2.css">
+    <script type="module" crossorigin src="/assets/index-CIHxllQE.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DLeuVx5q.css">
   </head>
   <body>
     <div id="root"></div>

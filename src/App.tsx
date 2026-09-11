@@ -10,7 +10,7 @@ function App() {
   return (
     <div
       id="top"
-      className="w-full min-h-screen bg-black text-[#E8DFD8] selection:bg-[#cbb59d] selection:text-black"
+      className="w-full min-h-screen bg-bg text-fg"
     >
       <a href="#main" className="skip-link">
         Skip to content

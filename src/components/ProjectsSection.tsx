@@ -2,214 +2,166 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import ScrollStack, { ScrollStackItem } from './ScrollStack';
 import { profile, projects } from '../data/profile';
+import { SectionHeader } from './SectionHeader';
+import { ButtonLink } from './Button';
+import { useMediaQuery } from '../hooks/useMediaQuery';
+
+type Project = (typeof projects)[number];
+
+/**
+ * A single project card. Rendered inside the ScrollStack deck on desktop
+ * and as a plain stacked list on phones and tablets, where the sticky
+ * transform deck fights the browser's own scrolling.
+ */
+const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
+  <article className="group relative w-full rounded-lg border border-line bg-surface p-6 sm:p-9 lg:p-12 overflow-hidden transition-colors duration-500 hover:border-gold">
+    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
+
+    <span className="corner-pin top-0 left-0 w-4 h-4 border-t-2 border-l-2" />
+    <span className="corner-pin top-0 right-0 w-4 h-4 border-t-2 border-r-2" />
+    <span className="corner-pin bottom-0 left-0 w-4 h-4 border-b-2 border-l-2" />
+    <span className="corner-pin bottom-0 right-0 w-4 h-4 border-b-2 border-r-2" />
+
+    <span
+      className="absolute -bottom-6 -right-3 font-display text-[6rem] sm:text-9xl text-fg/5 select-none pointer-events-none leading-none"
+      aria-hidden="true"
+    >
+      {project.number}
+    </span>
+
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-8 items-start relative z-10">
+
+      {/* Left: identity + description */}
+      <div className="lg:col-span-7 flex flex-col">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3">
+          <span className="font-mono text-[11px] font-semibold text-gold">{project.number} //</span>
+          <span className="label-mono text-fg-muted">{project.category}</span>
+        </div>
+
+        <h3 className="font-display text-[2.4rem] sm:text-5xl lg:text-6xl tracking-tight text-fg-strong mb-4 uppercase leading-[0.9] transition-colors group-hover:text-gold">
+          {project.title}
+        </h3>
+
+        <p className="font-body text-[12.5px] sm:text-[14px] font-light text-fg-muted leading-[1.85] mb-7 max-w-2xl">
+          {project.description}
+        </p>
+
+        <div className="flex flex-wrap gap-2 mt-auto pt-5 border-t border-line-soft">
+          {project.tech.map((t) => (
+            <span
+              key={t}
+              className="px-2.5 py-1 font-body text-[9.5px] font-medium tracking-[0.14em] uppercase rounded-[2px] border border-line bg-surface-3 text-fg-muted transition-colors duration-300 group-hover:border-gold/40"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Right: metrics + links */}
+      <div className="lg:col-span-5 flex flex-col gap-5 lg:pl-8 lg:border-l lg:border-line-soft">
+        <div className="space-y-2.5">
+          <span className="label-mono text-fg-subtle block mb-1">// PROJECT METRICS</span>
+          {project.metrics.map((m) => (
+            <div
+              key={m.label}
+              className="px-3.5 py-3 rounded-[2px] border border-line-soft bg-bg-alt flex items-center justify-between gap-3"
+            >
+              <span className="font-mono text-[9.5px] tracking-wider uppercase text-fg-muted">
+                {m.label}
+              </span>
+              <span className="font-mono text-[10.5px] font-medium text-gold text-right">
+                {m.value}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-2.5">
+          {project.liveUrl && (
+            <ButtonLink href={project.liveUrl} variant="primary" block icon="↗" external>
+              View live site
+            </ButtonLink>
+          )}
+          {project.githubUrl && (
+            <ButtonLink href={project.githubUrl} variant="outline" block icon="↗" external>
+              View on GitHub
+            </ButtonLink>
+          )}
+        </div>
+      </div>
+    </div>
+  </article>
+);
 
 export const ProjectsSection: React.FC = () => {
+  // The stacking deck needs real scroll runway and a fine pointer; below
+  // that it degrades into a janky, hard-to-read experience.
+  const useDeck = useMediaQuery('(min-width: 1024px)');
+
   return (
     <section
       id="work"
-      className="relative w-full bg-black text-[#E8DFD8] font-sans selection:bg-[#cbb59d] selection:text-black pt-20 pb-32 px-6 sm:px-12 lg:px-20"
+      className="relative w-full bg-bg text-fg pt-20 pb-24 sm:pb-32 px-5 sm:px-8 lg:px-20"
     >
-      {/* Studio Ambient Glows */}
-      <div className="absolute top-1/4 left-1/3 w-[36rem] h-[36rem] bg-[#D4AF37]/5 rounded-full blur-[180px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-[#8C6D4F]/5 rounded-full blur-[170px] pointer-events-none" />
+      <div
+        className="absolute top-1/4 left-1/3 w-[32rem] h-[32rem] rounded-full blur-[170px] pointer-events-none"
+        style={{ background: 'var(--glow-gold)' }}
+      />
 
       <div className="max-w-7xl mx-auto w-full relative z-10">
+        <SectionHeader
+          eyebrow="03 / FEATURED WORK"
+          titleTop="SHIPPED TO"
+          titleBottom="PRODUCTION."
+          lede="Real products with the scope, stack and numbers attached — no concept pieces."
+          ledeAside
+          className="mb-12 lg:mb-16"
+        />
 
-        {/* Eyebrow Header */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="flex items-center space-x-4 mb-5"
-        >
-          <span
-            className="text-[11px] font-medium tracking-[0.35em] uppercase text-[#D4AF37]"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
+        {useDeck ? (
+          <ScrollStack
+            itemDistance={20}
+            itemScale={0.035}
+            itemStackDistance={28}
+            stackPosition="15%"
+            scaleEndPosition="6%"
+            baseScale={0.88}
+            useWindowScroll
           >
-            03 / FEATURED WORK
-          </span>
-          <div className="w-20 h-[1px] bg-gradient-to-r from-[#D4AF37]/80 via-[#8C6D4F]/40 to-transparent" />
-        </motion.div>
+            {projects.map((project) => (
+              <ScrollStackItem key={project.title}>
+                <ProjectCard project={project} />
+              </ScrollStackItem>
+            ))}
+          </ScrollStack>
+        ) : (
+          <div className="space-y-6">
+            {projects.map((project) => (
+              <motion.div
+                key={project.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <ProjectCard project={project} />
+              </motion.div>
+            ))}
+          </div>
+        )}
 
-        {/* Section Headline */}
-        <motion.div
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6"
-        >
-          <h2
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] tracking-tight uppercase leading-[0.85] select-none"
-            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-          >
-            <span className="block text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] via-[#D5CBC0] to-[#605448] drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
-              SHIPPED TO
-            </span>
-            <span className="block text-transparent bg-clip-text bg-gradient-to-b from-[#F7E7C4] via-[#C99E5D] to-[#543B1A] drop-shadow-[0_8px_25px_rgba(201,158,93,0.35)]">
-              PRODUCTION.
-            </span>
-          </h2>
-
-          <p
-            className="text-xs sm:text-sm font-light text-[#A8988B] max-w-sm leading-relaxed"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-          >
-            Scroll to unfold each platform. Real products with the scope, stack and numbers attached —
-            no concept pieces.
-          </p>
-        </motion.div>
-
-        {/* Stacking Deck */}
-        <ScrollStack
-          itemDistance={20}
-          itemScale={0.035}
-          itemStackDistance={28}
-          stackPosition="15%"
-          scaleEndPosition="6%"
-          baseScale={0.88}
-          useWindowScroll={true}
-        >
-          {projects.map((project) => (
-            <ScrollStackItem key={project.title}>
-              <div className="relative w-full rounded-2xl border border-[#8C6D4F]/50 bg-[#0E0C0A] p-8 sm:p-12 shadow-[0_25px_70px_rgba(0,0,0,0.98)] group overflow-hidden transition-colors duration-500 hover:border-[#D4AF37]">
-
-                {/* Top Gold Border Light Flare */}
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/80 to-transparent" />
-
-                {/* Corner Minimal L-Brackets */}
-                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#D4AF37]/60 group-hover:border-[#D4AF37] transition-colors" />
-                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#D4AF37]/60 group-hover:border-[#D4AF37] transition-colors" />
-                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#D4AF37]/60 group-hover:border-[#D4AF37] transition-colors" />
-                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#D4AF37]/60 group-hover:border-[#D4AF37] transition-colors" />
-
-                {/* Big Background Watermark Number */}
-                <span
-                  className="absolute -bottom-6 -right-3 text-8xl sm:text-9xl font-bold text-[#EAD8C7]/5 select-none pointer-events-none leading-none"
-                  style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-                  aria-hidden="true"
-                >
-                  {project.number}
-                </span>
-
-                {/* Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
-
-                  {/* Left Column (7 Cols) */}
-                  <div className="lg:col-span-7 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center space-x-3 mb-4">
-                        <span className="text-xs font-mono font-bold text-[#D4AF37]">
-                          {project.number} //
-                        </span>
-                        <span className="text-[10.5px] font-mono tracking-[0.25em] uppercase text-[#A8988B]">
-                          {project.category}
-                        </span>
-                      </div>
-
-                      <h3
-                        className="text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white mb-4 group-hover:text-[#F7E7C4] transition-colors uppercase leading-[0.9]"
-                        style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-                      >
-                        {project.title}
-                      </h3>
-
-                      <p
-                        className="text-xs sm:text-sm md:text-[14px] font-light text-[#BDB0A4] leading-[1.85] tracking-wide mb-8 max-w-2xl"
-                        style={{ fontFamily: "'Montserrat', sans-serif" }}
-                      >
-                        {project.description}
-                      </p>
-                    </div>
-
-                    {/* Tech Stack Pills */}
-                    <div className="flex flex-wrap gap-2 pt-6 border-t border-[#8C6D4F]/25">
-                      {project.tech.map((t) => (
-                        <span
-                          key={t}
-                          className="px-3 py-1 text-[10px] font-medium tracking-[0.16em] uppercase rounded-sm border border-[#8C6D4F]/40 bg-[#16120E] text-[#E8D7C5] group-hover:border-[#D4AF37]/50 transition-all duration-300"
-                          style={{ fontFamily: "'Montserrat', sans-serif" }}
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Right Column (5 Cols) */}
-                  <div className="lg:col-span-5 flex flex-col justify-between h-full space-y-6 lg:pl-6 lg:border-l lg:border-[#8C6D4F]/25">
-                    <div className="space-y-3">
-                      <span className="text-[9.5px] font-mono tracking-[0.25em] uppercase text-[#8C6D4F] block mb-2">
-                        // PROJECT METRICS
-                      </span>
-                      {project.metrics.map((m) => (
-                        <div
-                          key={m.label}
-                          className="p-3.5 rounded-sm border border-[#8C6D4F]/25 bg-[#050403] flex items-center justify-between gap-3"
-                        >
-                          <span className="text-[10px] font-mono text-[#A8988B]">{m.label}</span>
-                          <span className="text-[11px] font-mono font-medium text-[#F7E7C4] text-right">
-                            {m.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      {project.liveUrl && (
-                        <a
-                          href={project.liveUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center space-x-3 px-6 py-3.5 border border-[#D4AF37] bg-[#D4AF37] hover:bg-[#F7E7C4] text-black text-[11px] font-medium tracking-[0.24em] uppercase transition-all duration-300"
-                          style={{ fontFamily: "'Montserrat', sans-serif" }}
-                        >
-                          <span>VIEW LIVE SITE</span>
-                          <span className="text-xs">↗</span>
-                        </a>
-                      )}
-                      {project.githubUrl && (
-                        <a
-                          href={project.githubUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center space-x-3 px-6 py-3.5 border border-[#8C6D4F] bg-[#16120E] hover:border-[#D4AF37] hover:bg-[#D4AF37] text-[#EAD8C7] hover:text-black text-[11px] font-medium tracking-[0.24em] uppercase transition-all duration-300 shadow-[0_0_20px_rgba(212,175,55,0.1)]"
-                          style={{ fontFamily: "'Montserrat', sans-serif" }}
-                        >
-                          <span>VIEW ON GITHUB</span>
-                          <span className="text-xs">↗</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </ScrollStackItem>
-          ))}
-        </ScrollStack>
-
-        {/* Footer link */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-[11px] font-light text-[#8C6D4F] tracking-wide mt-4"
-          style={{ fontFamily: "'Montserrat', sans-serif" }}
-        >
+        <p className="font-body text-[11.5px] font-light text-fg-muted mt-8">
           More repositories and work in progress on{' '}
           <a
             href={profile.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#D4AF37] hover:text-[#F7E7C4] underline underline-offset-4 transition-colors"
+            className="text-gold hover:underline underline-offset-4 transition-colors"
           >
             {profile.githubLabel} ↗
           </a>
-        </motion.p>
-
+        </p>
       </div>
     </section>
   );

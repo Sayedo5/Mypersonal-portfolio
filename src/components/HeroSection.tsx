@@ -3,15 +3,14 @@ import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import watermarkImg from '../assets/watermark.png';
 import { profile, terminalLines } from '../data/profile';
+import { ButtonLink } from './Button';
+import { ThemeToggle } from './ThemeToggle';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.16,
-      delayChildren: 0.2,
-    },
+    transition: { staggerChildren: 0.14, delayChildren: 0.15 },
   },
 };
 
@@ -21,10 +20,7 @@ const fadeUpVariants: Variants = {
     opacity: 1,
     y: 0,
     filter: 'blur(0px)',
-    transition: {
-      duration: 1.1,
-      ease: [0.16, 1, 0.3, 1],
-    },
+    transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
@@ -96,10 +92,10 @@ export const HeroSection: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const typed = useTypewriter(terminalLines);
 
+  // Pointer-driven cursor is desktop-only; skip the listener on touch devices.
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setCursorPos({ x: e.clientX, y: e.clientY });
-    };
+    if (!window.matchMedia('(min-width: 1024px) and (pointer: fine)').matches) return;
+    const handleMouseMove = (e: MouseEvent) => setCursorPos({ x: e.clientX, y: e.clientY });
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
@@ -112,60 +108,66 @@ export const HeroSection: React.FC = () => {
   }, [menuOpen]);
 
   return (
-    <section className="relative w-full min-h-screen overflow-hidden bg-black text-[#E8DFD8] font-sans selection:bg-[#cbb59d] selection:text-black lg:cursor-none">
-      {/* ================= 1. MINIMAL CUSTOM CURSOR (desktop only) ================= */}
+    <section className="relative w-full min-h-[100svh] overflow-hidden bg-bg text-fg lg:cursor-none">
+      {/* ================= 1. CUSTOM CURSOR (desktop, fine pointer only) ================= */}
       {cursorPos.x >= 0 && (
         <motion.div
-          className="fixed top-0 left-0 pointer-events-none z-50 rounded-full border border-[#D4AF37]/40 hidden lg:flex items-center justify-center backdrop-blur-[1px]"
+          className="fixed top-0 left-0 pointer-events-none z-50 rounded-full border border-gold/40 hidden lg:flex items-center justify-center backdrop-blur-[1px]"
           animate={{
             x: cursorPos.x - (isHovered ? 24 : 5),
             y: cursorPos.y - (isHovered ? 24 : 5),
             width: isHovered ? 48 : 10,
             height: isHovered ? 48 : 10,
-            backgroundColor: isHovered ? 'rgba(212, 175, 55, 0.1)' : 'rgba(235, 215, 195, 0.95)',
+            backgroundColor: isHovered ? 'rgba(212, 175, 55, 0.12)' : 'rgba(212, 175, 55, 0.9)',
           }}
           transition={{ type: 'spring', damping: 30, stiffness: 350, mass: 0.5 }}
         />
       )}
 
       {/* ================= 2. FIXED VIDEO LAYER ================= */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-black flex items-center justify-end">
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-bg flex items-center justify-center sm:justify-end">
         <video
           autoPlay
           muted
           loop
           playsInline
           aria-hidden="true"
-          className="h-screen w-auto max-w-none object-contain origin-right scale-95 md:scale-[0.98] lg:scale-100 opacity-60 sm:opacity-100"
+          className="h-full w-auto min-w-full sm:min-w-0 max-w-none object-cover sm:object-contain origin-center sm:origin-right"
+          style={{ opacity: 'var(--video-opacity)', mixBlendMode: 'var(--video-blend)' as never }}
         >
           <source src="/videos/hero.mp4" type="video/mp4" />
         </video>
 
-        {/* Seamless Soft Left Edge Blend */}
-        <div className="absolute inset-y-0 left-0 w-full sm:w-3/4 lg:w-1/2 bg-gradient-to-r from-black via-black/90 sm:via-black/85 to-transparent pointer-events-none" />
+        {/* Scrim: full wash on phones so text stays readable, side fade on desktop. */}
+        <div
+          className="absolute inset-0 sm:hidden"
+          style={{
+            background:
+              'linear-gradient(to bottom, var(--scrim-from) 0%, var(--scrim-via) 45%, var(--scrim-from) 100%)',
+          }}
+        />
+        <div
+          className="absolute inset-y-0 left-0 hidden sm:block w-3/4 lg:w-1/2"
+          style={{
+            background:
+              'linear-gradient(to right, var(--scrim-from) 0%, var(--scrim-via) 45%, transparent 100%)',
+          }}
+        />
 
-        {/* ================= 3. ANIMATED WATERMARK EMBLEM ================= */}
-        <div className="absolute bottom-6 right-6 lg:bottom-10 lg:right-12 pointer-events-none hidden sm:flex items-center justify-center z-10">
+        {/* ================= 3. WATERMARK EMBLEM ================= */}
+        <div className="absolute bottom-6 right-6 lg:bottom-10 lg:right-12 pointer-events-none hidden md:flex items-center justify-center z-10">
           <div className="relative flex items-center justify-center">
-            <div className="absolute w-36 h-36 bg-black/85 rounded-full blur-xl" />
-
+            <div className="absolute w-36 h-36 rounded-full blur-xl bg-bg/85" />
             <motion.div
-              animate={{
-                y: [-3, 3, -3],
-                scale: [1, 1.03, 1],
-              }}
-              transition={{
-                duration: 4.5,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
+              animate={{ y: [-3, 3, -3], scale: [1, 1.03, 1] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
               className="relative flex items-center justify-center"
             >
               <img
                 src={watermarkImg}
                 alt=""
                 aria-hidden="true"
-                className="w-28 h-28 lg:w-32 lg:h-32 object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                className="w-24 h-24 lg:w-32 lg:h-32 object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.25)]"
               />
             </motion.div>
           </div>
@@ -173,28 +175,26 @@ export const HeroSection: React.FC = () => {
       </div>
 
       {/* ================= 4. CONTENT LAYER ================= */}
-      <div className="relative z-10 flex flex-col justify-between min-h-screen w-full px-6 sm:px-12 lg:px-16 pt-6 pb-10 pointer-events-none">
+      <div className="relative z-10 flex flex-col min-h-[100svh] w-full px-5 sm:px-8 lg:px-16 pt-5 pb-10">
 
-        {/* Navigation Bar */}
-        <header className="relative flex items-center justify-between w-full pointer-events-auto">
+        {/* ---------- Navigation ---------- */}
+        <header className="relative flex items-center justify-between gap-3 w-full">
           <a
             href="#top"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold tracking-[0.3em] uppercase text-[#EAD8C7] hover:opacity-75 transition-opacity"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
+            className="flex items-center gap-2.5 shrink-0 font-body text-[11px] sm:text-xs font-semibold tracking-[0.28em] uppercase text-fg hover:text-gold transition-colors"
           >
-            <span className="grid place-items-center w-7 h-7 border border-[#D4AF37]/60 text-[10px] tracking-normal text-[#D4AF37]">
+            <span className="grid place-items-center w-8 h-8 border border-gold/60 text-[10px] tracking-normal text-gold">
               {profile.initials}
             </span>
             <span className="hidden sm:inline">SAYED MUHAMMAD</span>
           </a>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop nav */}
           <nav
             aria-label="Primary"
-            className="hidden lg:flex items-center space-x-7 xl:space-x-9 text-[11px] tracking-[0.24em] font-light uppercase text-[#C4B5A5] absolute left-1/2 -translate-x-1/2"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
+            className="hidden lg:flex items-center gap-7 xl:gap-9 absolute left-1/2 -translate-x-1/2"
           >
             {navItems.map((item) => (
               <a
@@ -202,39 +202,37 @@ export const HeroSection: React.FC = () => {
                 href={item.href}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                className="relative group py-1 transition-colors duration-300 hover:text-[#FFF5EB]"
+                className="relative group py-1 font-body text-[11px] tracking-[0.22em] font-light uppercase text-fg-muted hover:text-fg transition-colors duration-300"
               >
                 {item.name}
-                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-[#D4AF37]/50 transition-all duration-300 group-hover:w-full" />
+                <span className="absolute bottom-0 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3 ml-auto lg:ml-0">
-            {/* Right Action */}
-            <a
+          <div className="flex items-center gap-2 shrink-0">
+            <ThemeToggle />
+
+            <ButtonLink
               href="#contact"
+              variant="primary"
+              icon="↗"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-              className="group hidden sm:flex items-center space-x-2 text-[11px] tracking-[0.24em] font-light uppercase py-2 px-4 border border-[#8C6D4F]/50 hover:border-[#D4AF37] text-[#EAD8C7] transition-all duration-300 backdrop-blur-sm"
-              style={{ fontFamily: "'Montserrat', sans-serif" }}
+              className="hidden sm:inline-flex !px-4 !py-2 !text-[10px]"
             >
-              <span>HIRE ME</span>
-              <span className="transform transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 text-xs">
-                ↗
-              </span>
-            </a>
+              Hire me
+            </ButtonLink>
 
-            {/* Mobile menu toggle */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
               aria-expanded={menuOpen}
               aria-controls="mobile-nav"
               aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              className="lg:hidden p-2 border border-[#8C6D4F]/50 text-[#EAD8C7] hover:border-[#D4AF37] transition-colors"
+              className="lg:hidden grid h-9 w-9 place-items-center rounded-[2px] border border-line bg-surface-2 text-fg-muted hover:border-gold hover:text-gold transition-colors"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 {menuOpen ? (
                   <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                 ) : (
@@ -245,13 +243,12 @@ export const HeroSection: React.FC = () => {
           </div>
         </header>
 
-        {/* Mobile navigation panel */}
+        {/* ---------- Mobile nav panel ---------- */}
         {menuOpen && (
           <nav
             id="mobile-nav"
             aria-label="Sections"
-            className="lg:hidden pointer-events-auto mt-4 border border-[#8C6D4F]/40 bg-[#0A0806]/95 backdrop-blur-md"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
+            className="lg:hidden mt-3 border border-line bg-surface/95 backdrop-blur-md rounded-[2px] overflow-hidden"
           >
             <ul>
               {navItems.map((item) => (
@@ -259,183 +256,135 @@ export const HeroSection: React.FC = () => {
                   <a
                     href={item.href}
                     onClick={() => setMenuOpen(false)}
-                    className="block px-5 py-3.5 text-[11px] tracking-[0.24em] uppercase text-[#C4B5A5] border-b border-[#8C6D4F]/20 hover:text-[#F7E7C4] hover:bg-[#16120E] transition-colors"
+                    className="block px-5 py-3.5 font-body text-[11px] tracking-[0.22em] uppercase text-fg-muted border-b border-line-soft hover:text-gold hover:bg-surface-3 transition-colors"
                   >
                     {item.name}
                   </a>
                 </li>
               ))}
-              <li>
-                <a
-                  href="#contact"
-                  onClick={() => setMenuOpen(false)}
-                  className="block px-5 py-3.5 text-[11px] tracking-[0.24em] uppercase text-[#D4AF37]"
-                >
-                  HIRE ME ↗
-                </a>
+              <li className="p-3">
+                <ButtonLink href="#contact" variant="primary" block icon="↗" onClick={() => setMenuOpen(false)}>
+                  Hire me
+                </ButtonLink>
               </li>
             </ul>
           </nav>
         )}
 
-        {/* Main Hero Row */}
-        <div className="relative flex flex-col md:flex-row items-center justify-between w-full pt-10 pb-6 my-auto">
+        {/* ---------- Hero body ---------- */}
+        <div className="flex-1 flex flex-col lg:flex-row items-start lg:items-center justify-center lg:justify-between w-full py-10 sm:py-14 gap-10">
 
-          {/* LEFT: Headline & Actions */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="max-w-sm sm:max-w-md md:max-w-lg lg:max-w-[37rem] xl:max-w-[40rem] pointer-events-auto z-20"
+            className="w-full max-w-xl lg:max-w-[37rem] xl:max-w-[40rem] z-20"
           >
             {/* Availability pill */}
-            <motion.div variants={fadeUpVariants} className="mb-6 inline-flex items-center gap-2.5 py-1.5 pl-3 pr-4 border border-[#D4AF37]/30 bg-[#120F0C]/70 backdrop-blur-sm">
+            <motion.div
+              variants={fadeUpVariants}
+              className="mb-5 inline-flex items-center gap-2.5 py-1.5 pl-3 pr-4 border border-gold/30 bg-surface-2/70 backdrop-blur-sm rounded-full"
+            >
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-[#D4AF37] opacity-75 motion-safe:animate-ping" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#D4AF37]" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-gold opacity-75 motion-safe:animate-ping" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-gold" />
               </span>
-              <span
-                className="text-[10px] tracking-[0.24em] uppercase text-[#E8D7C5]"
-                style={{ fontFamily: "'Montserrat', sans-serif" }}
-              >
+              <span className="font-body text-[9.5px] sm:text-[10px] tracking-[0.22em] uppercase text-fg">
                 Available for new projects
               </span>
             </motion.div>
 
-            {/* Massive Condensed Headline */}
-            <motion.div variants={fadeUpVariants} className="relative mb-4 select-none">
-              <h1
-                className="text-6xl sm:text-7xl md:text-8xl lg:text-[7rem] xl:text-[7.6rem] tracking-tight uppercase leading-[0.83]"
-                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-              >
-                <span className="block text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] via-[#D5CBC0] to-[#605448] drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
-                  SAYED
-                </span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-b from-[#F7E7C4] via-[#C99E5D] to-[#543B1A] drop-shadow-[0_8px_25px_rgba(201,158,93,0.35)]">
-                  MUHAMMAD
-                </span>
-              </h1>
-            </motion.div>
+            {/* Headline */}
+            <motion.h1
+              variants={fadeUpVariants}
+              className="headline text-[3.25rem] min-[400px]:text-[3.75rem] sm:text-7xl md:text-8xl lg:text-[6.5rem] xl:text-[7.4rem] mb-4 select-none"
+            >
+              <span className="headline headline-neutral block">SAYED</span>
+              <span className="headline headline-gold block">MUHAMMAD</span>
+            </motion.h1>
 
             {/* Role line */}
-            <motion.div variants={fadeUpVariants} className="mb-5">
-              <p
-                className="text-[10px] sm:text-[11px] md:text-xs font-normal tracking-[0.26em] uppercase text-[#C4B29E]"
-                style={{ fontFamily: "'Montserrat', sans-serif" }}
-              >
-                FULL STACK DEVELOPER <span className="text-[#8C6D4F] mx-1">•</span> REACT NATIVE{' '}
-                <span className="text-[#8C6D4F] mx-1">•</span> NEXT.JS
-              </p>
-            </motion.div>
+            <motion.p
+              variants={fadeUpVariants}
+              className="mb-5 font-body text-[9.5px] min-[400px]:text-[10.5px] md:text-xs tracking-[0.2em] sm:tracking-[0.26em] uppercase text-fg-muted"
+            >
+              FULL STACK DEVELOPER <span className="text-gold mx-1">•</span> REACT NATIVE
+              <span className="text-gold mx-1">•</span> NEXT.JS
+            </motion.p>
 
             {/* Terminal status line */}
             <motion.div
               variants={fadeUpVariants}
-              className="mb-6 flex items-center gap-2 max-w-md px-3.5 py-2.5 border border-[#8C6D4F]/40 bg-[#0A0806]/80 backdrop-blur-sm overflow-hidden"
+              className="mb-6 flex items-center gap-2 w-full max-w-md px-3.5 py-2.5 border border-line bg-surface/80 backdrop-blur-sm rounded-[2px] overflow-hidden"
             >
-              <span className="text-[#D4AF37] text-xs font-mono shrink-0" aria-hidden="true">
+              <span className="font-mono text-xs text-gold shrink-0" aria-hidden="true">
                 $
               </span>
-              <span className="text-[11px] sm:text-xs font-mono text-[#BDB0A4] truncate" aria-live="polite">
+              <span className="font-mono text-[10.5px] sm:text-xs text-fg-muted truncate" aria-live="polite">
                 {typed}
               </span>
-              <span
-                className="w-[7px] h-[13px] bg-[#D4AF37] shrink-0 motion-safe:animate-pulse"
-                aria-hidden="true"
-              />
+              <span className="w-[7px] h-[13px] bg-gold shrink-0 motion-safe:animate-pulse" aria-hidden="true" />
             </motion.div>
 
             {/* Description */}
-            <motion.div
+            <motion.p
               variants={fadeUpVariants}
-              className="text-xs sm:text-sm md:text-[13.5px] font-light text-[#A8988B] leading-[1.85] tracking-wide max-w-lg mb-8"
-              style={{ fontFamily: "'Montserrat', sans-serif" }}
+              className="font-body text-[13px] sm:text-sm font-light text-fg-muted leading-[1.85] max-w-lg mb-8"
             >
-              <p>
-                I build <span className="text-[#E8D7C5]">Next.js web platforms</span>,{' '}
-                <span className="text-[#E8D7C5]">React Native mobile apps</span> and the{' '}
-                <span className="text-[#E8D7C5]">Node.js APIs</span> underneath them — all sharing one
-                database and one API layer.
-              </p>
-            </motion.div>
+              I build <span className="text-fg font-normal">Next.js web platforms</span>,{' '}
+              <span className="text-fg font-normal">React Native mobile apps</span> and the{' '}
+              <span className="text-fg font-normal">Node.js APIs</span> underneath them — all sharing
+              one database and one API layer.
+            </motion.p>
 
-            {/* CTA Buttons */}
-            <motion.div
-              variants={fadeUpVariants}
-              className="flex flex-wrap items-center gap-3 sm:gap-4"
-              style={{ fontFamily: "'Montserrat', sans-serif" }}
-            >
-              <motion.a
+            {/* CTAs */}
+            <motion.div variants={fadeUpVariants} className="flex flex-col min-[400px]:flex-row flex-wrap gap-3">
+              <ButtonLink
                 href="#work"
+                variant="primary"
+                icon="↗"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                whileHover={{ scale: 1.02 }}
-                className="group relative inline-flex items-center space-x-3 px-6 sm:px-7 py-3.5 border border-[#8C6D4F] bg-[#120F0C]/80 hover:border-[#D4AF37] text-[#EAD8C7] hover:text-[#FFF5EB] text-[11px] font-medium tracking-[0.24em] uppercase transition-all duration-300 shadow-[0_0_25px_rgba(212,175,55,0.18)]"
               >
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#E8D7C5]/40 to-transparent pointer-events-none" />
-                <span>EXPLORE MY WORK</span>
-                <span className="transform transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 text-xs">
-                  ↗
-                </span>
-              </motion.a>
-
-              <motion.a
+                Explore my work
+              </ButtonLink>
+              <ButtonLink
                 href={profile.resume}
-                target="_blank"
-                rel="noopener noreferrer"
+                variant="outline"
+                icon="↓"
+                iconDirection="down"
+                external
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                whileHover={{ scale: 1.02 }}
-                className="group relative inline-flex items-center space-x-2 px-6 sm:px-7 py-3.5 border border-[#8C6D4F]/40 hover:border-[#8C6D4F] text-[#BFA895] hover:text-[#EAD8C7] text-[11px] font-medium tracking-[0.24em] uppercase transition-all duration-300"
               >
-                <span>DOWNLOAD RESUME</span>
-                <span className="transform transition-transform duration-300 group-hover:translate-y-0.5 text-xs">
-                  ↓
-                </span>
-              </motion.a>
+                Download resume
+              </ButtonLink>
             </motion.div>
           </motion.div>
 
-          {/* RIGHT: Quote & Signature Card */}
+          {/* Quote & signature — desktop only */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.8, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="hidden lg:flex flex-col items-start pointer-events-auto pr-24 xl:pr-36 mr-4 z-20 select-none"
+            className="hidden xl:flex flex-col items-start pr-24 2xl:pr-36 z-20 select-none"
           >
-            <span className="text-xl text-[#C99E5D] leading-none font-serif mb-2">“</span>
-
-            <div
-              className="text-[9.5px] font-medium tracking-[0.24em] uppercase text-[#E0D3C5] space-y-1 mb-3"
-              style={{ fontFamily: "'Montserrat', sans-serif" }}
-            >
+            <span className="text-xl text-gold-deep leading-none font-serif mb-2">“</span>
+            <div className="font-body text-[9.5px] font-medium tracking-[0.22em] uppercase text-fg space-y-1 mb-3">
               <p>WEB, MOBILE AND API.</p>
               <p>ONE ENGINEER, ONE STACK.</p>
             </div>
-
-            <div className="w-28 h-[1px] bg-gradient-to-r from-[#D4AF37] via-[#E8D7C5]/70 to-transparent shadow-[0_0_8px_rgba(212,175,55,0.4)] mb-2" />
-
-            <div
-              className="text-[2.2rem] text-[#D8AB64] font-normal leading-none -ml-0.5"
-              style={{
-                fontFamily: "'Herr Von Muellerhoff', 'Allura', cursive",
-                letterSpacing: '0.04em',
-              }}
-            >
+            <div className="w-28 h-px bg-gradient-to-r from-gold to-transparent mb-2" />
+            <div className="font-script text-[2.2rem] text-gold leading-none -ml-0.5 tracking-wide">
               {profile.firstName}
             </div>
           </motion.div>
         </div>
 
-        {/* Scroll cue */}
-        <div className="hidden md:flex items-center gap-3 pointer-events-none">
-          <span
-            className="text-[9.5px] tracking-[0.3em] uppercase text-[#8C6D4F]"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-          >
-            SCROLL
-          </span>
-          <div className="w-16 h-[1px] bg-gradient-to-r from-[#8C6D4F] to-transparent" />
+        {/* ---------- Scroll cue ---------- */}
+        <div className="hidden md:flex items-center gap-3">
+          <span className="label-mono text-fg-subtle">SCROLL</span>
+          <div className="w-16 h-px bg-gradient-to-r from-bronze to-transparent" />
         </div>
       </div>
     </section>

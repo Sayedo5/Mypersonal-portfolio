@@ -1,8 +1,136 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap');
 @import 'tailwindcss';
 
+/* ================================================================
+   THEME TOKENS
+   Every colour on the site resolves through these variables, so the
+   light/dark switch is a single attribute flip on <html>.
+   Dark is the default; [data-theme="light"] overrides it.
+================================================================= */
+
+:root,
+[data-theme='dark'] {
+  --c-bg: #000000;
+  --c-bg-alt: #060504;
+  --c-surface: #0e0c0a;
+  --c-surface-2: #120f0c;
+  --c-surface-3: #16120e;
+  --c-surface-4: #1f1914;
+
+  --c-fg: #e8dfd8;
+  --c-fg-strong: #ffffff;
+  --c-fg-muted: #a8988b;
+  --c-fg-subtle: #8c6d4f;
+
+  --c-gold: #d4af37;
+  --c-gold-soft: #f7e7c4;
+  --c-gold-deep: #c99e5d;
+  --c-bronze: #8c6d4f;
+
+  --c-line: rgb(140 109 79 / 35%);
+  --c-line-soft: rgb(140 109 79 / 20%);
+
+  /* Headline gradients */
+  --h-neutral-from: #ffffff;
+  --h-neutral-via: #d5cbc0;
+  --h-neutral-to: #605448;
+  --h-gold-from: #f7e7c4;
+  --h-gold-via: #c99e5d;
+  --h-gold-to: #543b1a;
+
+  /* Scrims over the hero video */
+  --scrim-from: rgb(0 0 0 / 100%);
+  --scrim-via: rgb(0 0 0 / 88%);
+  --video-opacity: 1;
+  --video-blend: normal;
+
+  --glow-gold: rgb(212 175 55 / 5%);
+  --shadow-card: 0 25px 70px rgb(0 0 0 / 98%);
+  --selection-bg: #cbb59d;
+  --selection-fg: #000000;
+
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --c-bg: #f5f1e8;
+  --c-bg-alt: #efe9dc;
+  --c-surface: #fffdf8;
+  --c-surface-2: #faf6ed;
+  --c-surface-3: #f2ebdd;
+  --c-surface-4: #e9e0cd;
+
+  --c-fg: #241d16;
+  --c-fg-strong: #12100d;
+  --c-fg-muted: #5e5347;
+  --c-fg-subtle: #877253;
+
+  --c-gold: #96741a;
+  --c-gold-soft: #6d5412;
+  --c-gold-deep: #a9871f;
+  --c-bronze: #a89070;
+
+  --c-line: rgb(137 114 79 / 32%);
+  --c-line-soft: rgb(137 114 79 / 18%);
+
+  --h-neutral-from: #3a3128;
+  --h-neutral-via: #241d16;
+  --h-neutral-to: #12100d;
+  --h-gold-from: #a9871f;
+  --h-gold-via: #8a6a15;
+  --h-gold-to: #5c460e;
+
+  --scrim-from: rgb(245 241 232 / 100%);
+  --scrim-via: rgb(245 241 232 / 90%);
+  --video-opacity: 0.42;
+  --video-blend: luminosity;
+
+  --glow-gold: rgb(150 116 26 / 7%);
+  --shadow-card: 0 18px 45px rgb(60 45 20 / 12%);
+  --selection-bg: #96741a;
+  --selection-fg: #fffdf8;
+
+  color-scheme: light;
+}
+
+/* ================================================================
+   TAILWIND THEME BRIDGE
+   `inline` makes Tailwind emit var() references, so utilities like
+   bg-surface / text-gold follow the active theme at runtime.
+================================================================= */
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-bg-alt: var(--c-bg-alt);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-surface-3: var(--c-surface-3);
+  --color-surface-4: var(--c-surface-4);
+
+  --color-fg: var(--c-fg);
+  --color-fg-strong: var(--c-fg-strong);
+  --color-fg-muted: var(--c-fg-muted);
+  --color-fg-subtle: var(--c-fg-subtle);
+
+  --color-gold: var(--c-gold);
+  --color-gold-soft: var(--c-gold-soft);
+  --color-gold-deep: var(--c-gold-deep);
+  --color-bronze: var(--c-bronze);
+
+  --color-line: var(--c-line);
+  --color-line-soft: var(--c-line-soft);
+
+  --font-display: 'Bebas Neue', 'Oswald', 'Arial Narrow', sans-serif;
+  --font-body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-script: 'Herr Von Muellerhoff', 'Allura', cursive;
+}
+
+/* ================================================================
+   BASE
+================================================================= */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  background-color: var(--c-bg);
 }
 
 html,
@@ -10,27 +138,39 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background-color: #000;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  max-width: 100%;
 }
 
-/* Visible keyboard focus for anyone navigating without a mouse. */
+body {
+  background-color: var(--c-bg);
+  color: var(--c-fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease;
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-fg);
+}
+
 :where(a, button, input, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #d4af37;
+  outline: 2px solid var(--c-gold);
   outline-offset: 3px;
 }
 
-/* Skip link for keyboard and screen-reader users. */
 .skip-link {
   position: absolute;
   left: -9999px;
   top: 0;
   z-index: 100;
   padding: 0.75rem 1.25rem;
-  background: #d4af37;
-  color: #000;
-  font-family: 'Montserrat', sans-serif;
+  background: var(--c-gold);
+  color: var(--c-bg);
+  font-family: var(--font-body);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.2em;
@@ -42,21 +182,176 @@ body {
   top: 0.75rem;
 }
 
-/* Gold scrollbar to match the cinematic treatment. */
 ::-webkit-scrollbar {
   width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: var(--c-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: #3a2f22;
-  border-radius: 0;
+  background: var(--c-bronze);
+  opacity: 0.5;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #8c6d4f;
+  background: var(--c-gold);
 }
 
+/* ================================================================
+   TYPOGRAPHY HELPERS
+   Display headlines use one of two gradient treatments so every
+   section headline matches without repeating long class lists.
+================================================================= */
+.headline {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.86;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Fallback for the brief moment before the webfont resolves. */
+  -webkit-text-fill-color: transparent;
+}
+
+.headline-neutral {
+  background-image: linear-gradient(
+    to bottom,
+    var(--h-neutral-from),
+    var(--h-neutral-via),
+    var(--h-neutral-to)
+  );
+}
+
+.headline-gold {
+  background-image: linear-gradient(
+    to bottom,
+    var(--h-gold-from),
+    var(--h-gold-via),
+    var(--h-gold-to)
+  );
+}
+
+/* Small uppercase mono label used for eyebrows and meta rows. */
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+/* ================================================================
+   BUTTONS
+   One base class, three variants. Every call to action on the site
+   uses these, so sizing, radius and motion stay identical.
+================================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.6rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+/* Solid gold — the single strongest action on a screen. */
+.btn-primary {
+  background: var(--c-gold);
+  border-color: var(--c-gold);
+  color: #14100a;
+  box-shadow: 0 6px 24px rgb(212 175 55 / 22%);
+}
+.btn-primary:not(:disabled):hover {
+  background: var(--c-gold-deep);
+  border-color: var(--c-gold-deep);
+  box-shadow: 0 10px 30px rgb(212 175 55 / 34%);
+}
+[data-theme='light'] .btn-primary {
+  color: #fffdf8;
+  box-shadow: 0 6px 20px rgb(150 116 26 / 25%);
+}
+
+/* Outlined — secondary actions. */
+.btn-outline {
+  background: var(--c-surface-2);
+  border-color: var(--c-bronze);
+  color: var(--c-fg);
+}
+.btn-outline:not(:disabled):hover {
+  border-color: var(--c-gold);
+  color: var(--c-gold);
+  box-shadow: 0 8px 26px rgb(0 0 0 / 25%);
+}
+[data-theme='light'] .btn-outline:not(:disabled):hover {
+  box-shadow: 0 8px 22px rgb(60 45 20 / 12%);
+}
+
+/* Quiet — tertiary actions such as "download resume". */
+.btn-ghost {
+  background: transparent;
+  border-color: var(--c-line);
+  color: var(--c-fg-muted);
+}
+.btn-ghost:not(:disabled):hover {
+  border-color: var(--c-bronze);
+  color: var(--c-fg);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ================================================================
+   SURFACES
+================================================================= */
+.panel {
+  position: relative;
+  background: color-mix(in srgb, var(--c-surface) 85%, transparent);
+  border: 1px solid var(--c-line);
+  border-radius: 2px;
+  backdrop-filter: blur(12px);
+}
+
+/* The gold L-brackets used on cards and framed panels. */
+.corner-pin {
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-color: var(--c-gold);
+  opacity: 0.45;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.group:hover .corner-pin {
+  opacity: 1;
+}
+
+/* ================================================================
+   MOTION
+================================================================= */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -67,5 +362,8 @@ body {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+  .btn:not(:disabled):hover {
+    transform: none;
   }
 }
