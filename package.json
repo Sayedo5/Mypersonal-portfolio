@@ -23,6 +23,7 @@
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@vercel/blob": "^2.8.0",
+    "better-auth": "^1.7.4",
     "dotenv": "^17.4.2",
     "framer-motion": "^13.1.0",
     "jose": "^6.2.12",

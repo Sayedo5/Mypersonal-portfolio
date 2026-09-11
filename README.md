@@ -217,6 +217,29 @@ The four serverless functions are `/api/content`, `/api/contact`,
 `/api/auth/[action]` and `/api/admin/[...route]` — comfortably inside the Hobby
 plan's twelve-function limit.
 
+### The SPA rewrite in `vercel.json`
+
+```
+/((?!api/|assets/|src/|node_modules/|@|.*.).*)  ->  /index.html
+```
+
+This sends client-side routes (`/admin`, `/admin/login`, `/preview`) to the SPA. The
+exclusions matter and must not be trimmed:
+
+| Excluded | Why |
+|---|---|
+| `api/` | the serverless functions |
+| `assets/` | the built bundle |
+| `src/`, `node_modules/`, `@…` | how Vite serves modules during `vercel dev` |
+| `.*.` (any path with a dot) | every static file — hero.mp4, favicon.svg, resume.pdf |
+
+Drop the `src/`, `node_modules/` or `@` exclusions and `vercel dev` breaks with
+*"Failed to parse source for import analysis because the content contains invalid JS
+syntax"* pointing at `index.html` — because the rewrite returns HTML for a request
+Vite expects to be JavaScript.
+
+`vercel.json` is strict JSON: Vercel rejects unknown keys such as `_comment`.
+
 **After you have a real domain,** replace `https://sayedmuhammad.dev/` everywhere in
 `index.html` (canonical link, `og:url`, image URLs) and `siteUrl` in
 `src/data/profile.ts` — otherwise link previews and SEO point at a domain you don't own.

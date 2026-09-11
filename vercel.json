@@ -10,7 +10,7 @@
   },
   "rewrites": [
     {
-      "source": "/((?!api/|assets/|videos/|favicon\\.svg|icons\\.svg|robots\\.txt|sitemap\\.xml|og-image\\.png|resume\\.pdf).*)",
+      "source": "/((?!api/|assets/|src/|node_modules/|@|.*\\.).*)",
       "destination": "/index.html"
     }
   ],
