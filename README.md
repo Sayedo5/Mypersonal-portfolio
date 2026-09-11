@@ -240,7 +240,7 @@ Vite expects to be JavaScript.
 
 `vercel.json` is strict JSON: Vercel rejects unknown keys such as `_comment`.
 
-**After you have a real domain,** replace `https://sayedmuhammad.dev/` everywhere in
+**After you have a real domain,** replace `https://syedmuhammad.dev/` everywhere in
 `index.html` (canonical link, `og:url`, image URLs) and `siteUrl` in
 `src/data/profile.ts` — otherwise link previews and SEO point at a domain you don't own.
 

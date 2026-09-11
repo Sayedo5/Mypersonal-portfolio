@@ -10,7 +10,7 @@ export const profile = {
   role: 'Full-Stack Web & Mobile Developer',
   roleLine: 'FULL STACK DEVELOPER • REACT NATIVE • NEXT.JS • NODE.JS',
   location: 'Islamabad, Pakistan',
-  email: 'sayedmuhammad.dev@gmail.com',
+  email: 'syedmuhammad.dev@gmail.com',
   phone: '+92-303-9192964',
   phoneHref: '+923039192964',
   github: 'https://github.com/Sayedo5',
