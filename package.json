@@ -7,7 +7,7 @@
     "postinstall": "prisma generate",
     "dev": "vite",
     "dev:full": "vercel dev",
-    "build": "vite build",
+    "build": "npm run typecheck && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "typecheck": "tsc --build --force",
@@ -17,7 +17,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "admin:bootstrap": "tsx scripts/bootstrap-admin.ts"
+    "admin:bootstrap": "tsx scripts/bootstrap-admin.ts",
+    "build:only": "vite build"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

@@ -35,7 +35,8 @@ const STATUS_BY_CODE: Record<ApiError['code'], number> = {
 /** Thrown anywhere in a handler; `withApi` turns it into a clean JSON body. */
 export class HttpError extends Error {
   readonly code: ApiError['code'];
-  readonly fieldErrors?: Record<string, string[]>;
+  /** `| undefined` is required under exactOptionalPropertyTypes. */
+  readonly fieldErrors?: Record<string, string[]> | undefined;
 
   constructor(code: ApiError['code'], message: string, fieldErrors?: Record<string, string[]>) {
     super(message);

@@ -50,15 +50,28 @@ export async function listMedia() {
   return prisma.mediaAsset.findMany({ orderBy: { createdAt: 'desc' } });
 }
 
+/**
+ * Alt text, width and height are all optional here on purpose.
+ *
+ * Upload is a two-step flow: the browser sends the file to Blob storage and
+ * immediately registers it, then the owner writes the alt text in the Media
+ * screen (saved on blur). So an asset legitimately has no alt text at the
+ * moment it is registered — required alt text is enforced where it actually
+ * matters, on ProjectMedia, which the schema types as non-null.
+ *
+ * Each field accepts `undefined` as well as `null` so the shape is satisfied
+ * whether the caller's validator emits an optional key or a required one —
+ * this is what the Vercel build tripped over when the property was required.
+ */
 export async function registerAsset(input: {
   storageKey: string;
   publicUrl: string;
   originalName: string;
   mimeType: string;
   byteSize: number;
-  altText: string | null;
-  width?: number | null;
-  height?: number | null;
+  altText?: string | null | undefined;
+  width?: number | null | undefined;
+  height?: number | null | undefined;
 }) {
   if (input.byteSize > MAX_UPLOAD_BYTES) {
     throw new HttpError('VALIDATION', 'That file is larger than the 50 MB limit.');
@@ -76,12 +89,15 @@ export async function registerAsset(input: {
       byteSize: BigInt(Math.round(input.byteSize)),
       width: input.width ?? null,
       height: input.height ?? null,
-      altText: input.altText,
+      altText: input.altText ?? null,
     },
     update: {
       publicUrl: input.publicUrl,
       byteSize: BigInt(Math.round(input.byteSize)),
-      altText: input.altText,
+      // Only touch alt text when the caller actually supplied it, so
+      // re-uploading a file does not wipe the description already written
+      // for it in the Media screen.
+      ...(input.altText === undefined ? {} : { altText: input.altText }),
     },
   });
 }
