@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { useContent } from '../content/ContentProvider';
 
 /**
  * Sun/moon theme switch. Sits in the header next to the primary CTA
@@ -7,7 +8,11 @@ import { useTheme } from '../hooks/useTheme';
  */
 export const ThemeToggle: React.FC<{ className?: string }> = ({ className = '' }) => {
   const { theme, toggle } = useTheme();
+  const { theme: appearance } = useContent();
   const isDark = theme === 'dark';
+
+  // The owner can hide the switch entirely from Appearance.
+  if (!appearance.allowToggle) return null;
 
   return (
     <button

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import watermarkImg from '../assets/watermark.png';
-import { profile, terminalLines } from '../data/profile';
+import { useContent } from '../content/ContentProvider';
+import { RichText } from './RichText';
 import { ButtonLink } from './Button';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -24,15 +25,6 @@ const fadeUpVariants: Variants = {
   },
 };
 
-const navItems = [
-  { name: 'ABOUT', href: '#about' },
-  { name: 'SERVICES', href: '#services' },
-  { name: 'WORK', href: '#work' },
-  { name: 'SKILLS', href: '#skills' },
-  { name: 'EXPERIENCE', href: '#experience' },
-  { name: 'CONTACT', href: '#contact' },
-];
-
 /**
  * Typewriter cycling the availability phrases in the hero terminal line.
  * All progression state lives inside the effect so React StrictMode's
@@ -42,6 +34,11 @@ function useTypewriter(lines: readonly string[]) {
   const [text, setText] = useState('');
 
   useEffect(() => {
+    if (!lines.length) {
+      setText('');
+      return;
+    }
+
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setText(lines[0]);
       return;
@@ -87,10 +84,14 @@ function useTypewriter(lines: readonly string[]) {
 }
 
 export const HeroSection: React.FC = () => {
+  const { profile, hero, site, theme, navigation } = useContent();
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [isHovered, setIsHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const typed = useTypewriter(terminalLines);
+  const typed = useTypewriter(hero.terminalLines);
+
+  const navItems = navigation.map((item) => ({ name: item.label, href: item.href }));
+  const resumeHref = site.resumeUrl ?? '/resume.pdf';
 
   // Pointer-driven cursor is desktop-only; skip the listener on touch devices.
   useEffect(() => {
@@ -135,7 +136,7 @@ export const HeroSection: React.FC = () => {
           className="h-full w-auto min-w-full sm:min-w-0 max-w-none object-cover sm:object-contain origin-center sm:origin-right"
           style={{ opacity: 'var(--video-opacity)', mixBlendMode: 'var(--video-blend)' as never }}
         >
-          <source src="/videos/hero.mp4" type="video/mp4" />
+          <source src={theme.heroVideoUrl ?? '/videos/hero.mp4'} type="video/mp4" />
         </video>
 
         {/* Scrim: full wash on phones so text stays readable, side fade on desktop. */}
@@ -164,7 +165,7 @@ export const HeroSection: React.FC = () => {
               className="relative flex items-center justify-center"
             >
               <img
-                src={watermarkImg}
+                src={theme.watermarkUrl ?? watermarkImg}
                 alt=""
                 aria-hidden="true"
                 className="w-24 h-24 lg:w-32 lg:h-32 object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.25)]"
@@ -188,7 +189,7 @@ export const HeroSection: React.FC = () => {
             <span className="grid place-items-center w-8 h-8 border border-gold/60 text-[10px] tracking-normal text-gold">
               {profile.initials}
             </span>
-            <span className="hidden sm:inline">SAYED MUHAMMAD</span>
+            <span className="hidden sm:inline">{profile.name.toUpperCase()}</span>
           </a>
 
           {/* Desktop nav */}
@@ -214,14 +215,14 @@ export const HeroSection: React.FC = () => {
             <ThemeToggle />
 
             <ButtonLink
-              href="#contact"
+              href={site.contactCtaHref}
               variant="primary"
               icon="↗"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               className="hidden sm:inline-flex !px-4 !py-2 !text-[10px]"
             >
-              Hire me
+              {site.contactCtaLabel}
             </ButtonLink>
 
             <button
@@ -263,8 +264,8 @@ export const HeroSection: React.FC = () => {
                 </li>
               ))}
               <li className="p-3">
-                <ButtonLink href="#contact" variant="primary" block icon="↗" onClick={() => setMenuOpen(false)}>
-                  Hire me
+                <ButtonLink href={site.contactCtaHref} variant="primary" block icon="↗" onClick={() => setMenuOpen(false)}>
+                  {site.contactCtaLabel}
                 </ButtonLink>
               </li>
             </ul>
@@ -281,26 +282,28 @@ export const HeroSection: React.FC = () => {
             className="w-full max-w-xl lg:max-w-[37rem] xl:max-w-[40rem] z-20"
           >
             {/* Availability pill */}
-            <motion.div
-              variants={fadeUpVariants}
-              className="mb-5 inline-flex items-center gap-2.5 py-1.5 pl-3 pr-4 border border-gold/30 bg-surface-2/70 backdrop-blur-sm rounded-full"
-            >
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-gold opacity-75 motion-safe:animate-ping" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-gold" />
-              </span>
-              <span className="font-body text-[9.5px] sm:text-[10px] tracking-[0.22em] uppercase text-fg">
-                Available for new projects
-              </span>
-            </motion.div>
+            {hero.showPill && site.availableForWork && (
+              <motion.div
+                variants={fadeUpVariants}
+                className="mb-5 inline-flex items-center gap-2.5 py-1.5 pl-3 pr-4 border border-gold/30 bg-surface-2/70 backdrop-blur-sm rounded-full"
+              >
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-gold opacity-75 motion-safe:animate-ping" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-gold" />
+                </span>
+                <span className="font-body text-[9.5px] sm:text-[10px] tracking-[0.22em] uppercase text-fg">
+                  {site.availabilityText ?? hero.availabilityPill}
+                </span>
+              </motion.div>
+            )}
 
             {/* Headline */}
             <motion.h1
               variants={fadeUpVariants}
               className="headline text-[3.25rem] min-[400px]:text-[3.75rem] sm:text-7xl md:text-8xl lg:text-[6.5rem] xl:text-[7.4rem] mb-4 select-none"
             >
-              <span className="headline headline-neutral block">SAYED</span>
-              <span className="headline headline-gold block">MUHAMMAD</span>
+              <span className="headline headline-neutral block">{hero.headlineTop}</span>
+              <span className="headline headline-gold block">{hero.headlineBottom}</span>
             </motion.h1>
 
             {/* Role line */}
@@ -308,8 +311,8 @@ export const HeroSection: React.FC = () => {
               variants={fadeUpVariants}
               className="mb-5 font-body text-[9.5px] min-[400px]:text-[10.5px] md:text-xs tracking-[0.2em] sm:tracking-[0.26em] uppercase text-fg-muted"
             >
-              FULL STACK DEVELOPER <span className="text-gold mx-1">•</span> REACT NATIVE
-              <span className="text-gold mx-1">•</span> NEXT.JS
+              {hero.roleLinePart1} <span className="text-gold mx-1">•</span> {hero.roleLinePart2}
+              <span className="text-gold mx-1">•</span> {hero.roleLinePart3}
             </motion.p>
 
             {/* Terminal status line */}
@@ -331,25 +334,22 @@ export const HeroSection: React.FC = () => {
               variants={fadeUpVariants}
               className="font-body text-[13px] sm:text-sm font-light text-fg-muted leading-[1.85] max-w-lg mb-8"
             >
-              I build <span className="text-fg font-normal">Next.js web platforms</span>,{' '}
-              <span className="text-fg font-normal">React Native mobile apps</span> and the{' '}
-              <span className="text-fg font-normal">Node.js APIs</span> underneath them — all sharing
-              one database and one API layer.
+              <RichText text={hero.description} />
             </motion.p>
 
             {/* CTAs */}
             <motion.div variants={fadeUpVariants} className="flex flex-col min-[400px]:flex-row flex-wrap gap-3">
               <ButtonLink
-                href="#work"
+                href={hero.primaryCtaHref}
                 variant="primary"
                 icon="↗"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
-                Explore my work
+                {hero.primaryCtaLabel}
               </ButtonLink>
               <ButtonLink
-                href={profile.resume}
+                href={resumeHref}
                 variant="outline"
                 icon="↓"
                 iconDirection="down"
@@ -357,7 +357,7 @@ export const HeroSection: React.FC = () => {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
-                Download resume
+                {hero.resumeCtaLabel}
               </ButtonLink>
             </motion.div>
           </motion.div>
@@ -371,8 +371,8 @@ export const HeroSection: React.FC = () => {
           >
             <span className="text-xl text-gold-deep leading-none font-serif mb-2">“</span>
             <div className="font-body text-[9.5px] font-medium tracking-[0.22em] uppercase text-fg space-y-1 mb-3">
-              <p>WEB, MOBILE AND API.</p>
-              <p>ONE ENGINEER, ONE STACK.</p>
+              <p>{hero.quoteLine1}</p>
+              <p>{hero.quoteLine2}</p>
             </div>
             <div className="w-28 h-px bg-gradient-to-r from-gold to-transparent mb-2" />
             <div className="font-script text-[2.2rem] text-gold leading-none -ml-0.5 tracking-wide">
@@ -383,7 +383,7 @@ export const HeroSection: React.FC = () => {
 
         {/* ---------- Scroll cue ---------- */}
         <div className="hidden md:flex items-center gap-3">
-          <span className="label-mono text-fg-subtle">SCROLL</span>
+          <span className="label-mono text-fg-subtle">{hero.scrollCueLabel}</span>
           <div className="w-16 h-px bg-gradient-to-r from-bronze to-transparent" />
         </div>
       </div>

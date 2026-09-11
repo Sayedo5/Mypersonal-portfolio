@@ -1,0 +1,649 @@
+// Portfolio CMS schema.
+//
+// Draft/publish model, mirroring the reference project:
+//   - Table columns hold the DRAFT the admin is editing.
+//   - `publishedPayload` holds the JSON snapshot the public site renders.
+// Saving in the admin panel touches columns only; Publish copies the
+// validated draft into `publishedPayload` and stamps `publishedAt`.
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum ContactStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum MediaKind {
+  IMAGE
+  DOCUMENT
+  VIDEO
+}
+
+enum StorageProvider {
+  LOCAL
+  VERCEL_BLOB
+  STATIC
+}
+
+enum ThemeMode {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+enum SkillEmphasis {
+  CORE
+  STRONG
+  SUPPORTING
+}
+
+enum EntryKind {
+  CAPABILITY
+  OUTCOME
+}
+
+enum JourneyKind {
+  EXPERIENCE
+  EDUCATION
+}
+
+// ---------------------------------------------------------------- auth
+
+model User {
+  id               String      @id @default(cuid())
+  name             String
+  email            String      @unique
+  passwordHash     String
+  role             String      @default("OWNER")
+  twoFactorEnabled Boolean     @default(false)
+  lastLoginAt      DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  sessions         Session[]
+  twoFactors       TwoFactor[]
+  auditLogs        AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mfaPassed Boolean  @default(false)
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model TwoFactor {
+  id                      String    @id @default(cuid())
+  userId                  String    @unique
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secret                  String
+  backupCodes             String[]  @default([])
+  verified                Boolean   @default(false)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
+
+model RateLimit {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([windowStart])
+}
+
+// ------------------------------------------------------- site + theme
+
+model SiteSettings {
+  id        String @id @default(cuid())
+  stableKey String @unique @default("site")
+
+  siteName              String
+  canonicalUrl          String
+  defaultSeoTitle       String
+  defaultSeoDescription String
+  defaultSeoKeywords    String[] @default([])
+  ogImageUrl            String?
+  allowIndexing         Boolean  @default(true)
+
+  availableForWork Boolean @default(true)
+  availabilityText String?
+
+  contactCtaLabel String @default("Hire me")
+  contactCtaHref  String @default("#contact")
+
+  resumeMediaAssetId String?
+  resumeMediaAsset   MediaAsset? @relation("SiteResumeMedia", fields: [resumeMediaAssetId], references: [id], onDelete: Restrict)
+  resumeUrl          String?
+
+  // Footer strip
+  footerCreditLine String?
+
+  // schema.org Person JSON-LD, edited as structured data in the admin panel
+  structuredData Json?
+
+  publishedPayload  Json?
+  publishedRevision Int       @default(0)
+  publishedAt       DateTime?
+  seedVersion       Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model ThemeSettings {
+  id        String @id @default(cuid())
+  stableKey String @unique @default("theme")
+
+  defaultMode  ThemeMode @default(DARK)
+  allowToggle  Boolean   @default(true)
+  accentGold   String    @default("#D4AF37")
+  accentBronze String    @default("#8C6E2F")
+
+  logoMediaAssetId      String?
+  faviconMediaAssetId   String?
+  portraitMediaAssetId  String?
+  watermarkMediaAssetId String?
+  heroVideoMediaAssetId String?
+  socialMediaAssetId    String?
+
+  logoMediaAsset      MediaAsset? @relation("ThemeLogoMedia", fields: [logoMediaAssetId], references: [id], onDelete: Restrict)
+  faviconMediaAsset   MediaAsset? @relation("ThemeFaviconMedia", fields: [faviconMediaAssetId], references: [id], onDelete: Restrict)
+  portraitMediaAsset  MediaAsset? @relation("ThemePortraitMedia", fields: [portraitMediaAssetId], references: [id], onDelete: Restrict)
+  watermarkMediaAsset MediaAsset? @relation("ThemeWatermarkMedia", fields: [watermarkMediaAssetId], references: [id], onDelete: Restrict)
+  heroVideoMediaAsset MediaAsset? @relation("ThemeHeroVideoMedia", fields: [heroVideoMediaAssetId], references: [id], onDelete: Restrict)
+  socialMediaAsset    MediaAsset? @relation("ThemeSocialMedia", fields: [socialMediaAssetId], references: [id], onDelete: Restrict)
+
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// ------------------------------------------------------------ profile
+
+model Profile {
+  id        String @id @default(cuid())
+  stableKey String @unique @default("profile")
+
+  name              String
+  firstName         String
+  initials          String
+  professionalTitle String
+  roleLine          String
+  location          String
+  email             String
+  phone             String?
+  phoneHref         String?
+  shortSummary      String?
+  longBiography     String
+  workingPrinciples String[] @default([])
+  contactPitch      String
+  statusCopy        String?
+
+  visible          Boolean       @default(true)
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+// Hero-specific copy that has no equivalent in the reference project.
+model HeroSettings {
+  id        String @id @default(cuid())
+  stableKey String @unique @default("hero")
+
+  headlineTop     String
+  headlineBottom  String
+  availabilityPill String
+  showPill        Boolean @default(true)
+  roleLinePart1   String
+  roleLinePart2   String
+  roleLinePart3   String
+  description     String
+  primaryCtaLabel String  @default("Explore my work")
+  primaryCtaHref  String  @default("#work")
+  resumeCtaLabel  String  @default("Download resume")
+  quoteLine1      String
+  quoteLine2      String
+  scrollCueLabel  String  @default("SCROLL")
+
+  terminalLines String[] @default([])
+
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// -------------------------------------------- structure & navigation
+
+model NavigationItem {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  label            String
+  targetSectionKey String?
+  targetSection    ContentSection? @relation(fields: [targetSectionKey], references: [stableKey], onDelete: SetNull)
+  externalUrl      String?
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([visible, sortOrder])
+}
+
+/// One per on-page section. titleTop/titleBottom drive the two-line
+/// gradient headline the portfolio already renders via SectionHeader.
+model ContentSection {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  eyebrow     String
+  titleTop    String
+  titleBottom String
+  lede        String?
+  ledeAside   Boolean @default(false)
+
+  visible          Boolean          @default(true)
+  sortOrder        Int
+  status           PublishStatus    @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  navigationItems  NavigationItem[]
+
+  @@index([visible, sortOrder])
+}
+
+model SocialLink {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  platform String
+  label    String
+  value    String
+  url      String
+  external Boolean @default(true)
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([visible, sortOrder])
+}
+
+// ----------------------------------------------- about: headline stats
+
+model Stat {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  value String
+  label String
+  gold  Boolean @default(false)
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([visible, sortOrder])
+}
+
+// ---------------------------------------------- services & guarantees
+
+model Service {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  number      String
+  title       String
+  description String
+  points      String[] @default([])
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([visible, sortOrder])
+}
+
+model Guarantee {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  title  String
+  detail String
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([visible, sortOrder])
+}
+
+// ------------------------------------------------------------- career
+
+/// Experience and education share one timeline in the portfolio UI, so
+/// they share one table discriminated by kind. The admin panel still
+/// edits them as two separate lists.
+model JourneyEntry {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  kind         JourneyKind @default(EXPERIENCE)
+  /// Free-text gutter label, e.g. "FEB 2026 - PRESENT".
+  yearLabel    String
+  title        String
+  organization String
+  location     String?
+  startDate    DateTime?   @db.Date
+  endDate      DateTime?   @db.Date
+  current      Boolean     @default(false)
+  description  String
+  achievements String[]    @default([])
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([kind, visible, sortOrder])
+}
+
+// ------------------------------------------------------------- skills
+
+model SkillCategory {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  title       String
+  badge       String
+  stat        String
+  description String
+  /// Tailwind column span driving the bento grid, e.g. "lg:col-span-7".
+  colSpan     String @default("lg:col-span-6")
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  skills           Skill[]
+
+  @@index([visible, sortOrder])
+}
+
+model Skill {
+  id        String @id @default(cuid())
+  stableKey String @unique
+
+  categoryId String
+  category   SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name       String
+  emphasis   SkillEmphasis @default(SUPPORTING)
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([categoryId, visible, sortOrder])
+}
+
+// ----------------------------------------------------------- projects
+
+model Project {
+  id        String @id @default(cuid())
+  stableKey String @unique
+  slug      String @unique
+
+  number       String
+  title        String
+  category     String
+  summary      String?
+  description  String
+  attribution  String?
+  problem      String?
+  contribution String?
+  architecture String?
+
+  liveUrl        String?
+  repositoryUrl  String?
+  featured       Boolean @default(false)
+  seoTitle       String?
+  seoDescription String?
+
+  visible          Boolean       @default(true)
+  sortOrder        Int
+  status           PublishStatus @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  technologies ProjectTechnology[]
+  metrics      ProjectMetric[]
+  highlights   ProjectHighlight[]
+  media        ProjectMedia[]
+
+  @@index([visible, sortOrder])
+  @@index([featured, sortOrder])
+}
+
+model Technology {
+  id        String @id @default(cuid())
+  stableKey String @unique
+  name      String @unique
+
+  visible          Boolean             @default(true)
+  sortOrder        Int                 @default(0)
+  status           PublishStatus       @default(DRAFT)
+  publishedPayload Json?
+  publishedAt      DateTime?
+  seedVersion      Int                 @default(0)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  projects         ProjectTechnology[]
+
+  @@index([visible, sortOrder])
+}
+
+model ProjectTechnology {
+  projectId    String
+  technologyId String
+  sortOrder    Int
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Restrict)
+  createdAt    DateTime   @default(now())
+
+  @@id([projectId, technologyId])
+  @@index([technologyId])
+  @@index([projectId, sortOrder])
+}
+
+/// The "PROJECT METRICS" rail on each project card.
+model ProjectMetric {
+  id        String  @id @default(cuid())
+  stableKey String  @unique
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  label String
+  value String
+
+  visible   Boolean  @default(true)
+  sortOrder Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, sortOrder])
+}
+
+model ProjectHighlight {
+  id        String  @id @default(cuid())
+  stableKey String  @unique
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  kind EntryKind @default(CAPABILITY)
+  text String
+
+  visible   Boolean  @default(true)
+  sortOrder Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, sortOrder])
+}
+
+model ProjectMedia {
+  id           String     @id @default(cuid())
+  stableKey    String     @unique
+  projectId    String
+  mediaAssetId String
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  displayRole String  @default("GALLERY")
+  caption     String?
+  altText     String
+
+  visible   Boolean  @default(true)
+  sortOrder Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, mediaAssetId, displayRole])
+  @@index([projectId, sortOrder])
+  @@index([mediaAssetId])
+}
+
+// -------------------------------------------------------------- media
+
+model MediaAsset {
+  id              String          @id @default(cuid())
+  kind            MediaKind
+  storageProvider StorageProvider
+  storageKey      String          @unique
+  publicUrl       String
+  originalName    String
+  mimeType        String
+  byteSize        BigInt
+  width           Int?
+  height          Int?
+  altText         String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  siteResumeUses     SiteSettings[]  @relation("SiteResumeMedia")
+  themeLogoUses      ThemeSettings[] @relation("ThemeLogoMedia")
+  themeFaviconUses   ThemeSettings[] @relation("ThemeFaviconMedia")
+  themePortraitUses  ThemeSettings[] @relation("ThemePortraitMedia")
+  themeWatermarkUses ThemeSettings[] @relation("ThemeWatermarkMedia")
+  themeHeroVideoUses ThemeSettings[] @relation("ThemeHeroVideoMedia")
+  themeSocialUses    ThemeSettings[] @relation("ThemeSocialMedia")
+  projectMedia       ProjectMedia[]
+}
+
+// -------------------------------------------------- inbox + audit log
+
+model ContactMessage {
+  id              String        @id @default(cuid())
+  name            String
+  email           String
+  company         String?
+  subject         String?
+  message         String
+  status          ContactStatus @default(UNREAD)
+  requestMetadata Json?
+  readAt          DateTime?
+  archivedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  ownerUserId String?
+  ownerUser   User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([ownerUserId, createdAt])
+}

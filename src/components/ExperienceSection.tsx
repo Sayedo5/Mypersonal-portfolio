@@ -1,9 +1,11 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { journey } from '../data/profile';
+import { useContent } from '../content/ContentProvider';
 import { SectionHeader } from './SectionHeader';
 
 export const ExperienceSection: React.FC = () => {
+  const { journey, sections } = useContent();
+  const section = sections.experience;
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -26,9 +28,11 @@ export const ExperienceSection: React.FC = () => {
 
       <div className="max-w-4xl mx-auto w-full relative z-10">
         <SectionHeader
-          eyebrow="05 / EXPERIENCE"
-          titleTop="EXPERIENCE &"
-          titleBottom="EDUCATION."
+          eyebrow={section.eyebrow}
+          titleTop={section.titleTop}
+          titleBottom={section.titleBottom}
+          lede={section.lede ?? undefined}
+          ledeAside={section.ledeAside}
           className="mb-14"
         />
 
@@ -89,11 +93,32 @@ export const ExperienceSection: React.FC = () => {
 
                   <span className="block font-body text-[9.5px] font-semibold tracking-[0.18em] uppercase text-fg-subtle mb-2.5">
                     {stop.organization}
+                    {stop.location && (
+                      <span className="text-fg-subtle/70"> · {stop.location}</span>
+                    )}
                   </span>
 
                   <p className="font-body text-[12.5px] sm:text-[13px] font-light text-fg-muted leading-[1.8] max-w-lg">
                     {stop.description}
                   </p>
+
+                  {/* Optional achievement bullets. Empty by default, so the
+                      timeline renders exactly as it did before. */}
+                  {stop.achievements.length > 0 && (
+                    <ul className="mt-3 space-y-2 max-w-lg">
+                      {stop.achievements.map((achievement) => (
+                        <li
+                          key={achievement}
+                          className="flex items-start gap-2.5 font-body text-[12px] font-light text-fg-muted leading-relaxed"
+                        >
+                          <span className="text-gold mt-px shrink-0" aria-hidden="true">
+                            ✦
+                          </span>
+                          {achievement}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </motion.li>
             ))}

@@ -1,16 +1,117 @@
-# Sayed Muhammad — Portfolio
+# Sayed Muhammad — Portfolio + Admin CMS
 
-Personal portfolio site. React 19 + TypeScript + Vite + Tailwind CSS v4, with a
-dark/light theme, a cinematic gold treatment, and Framer Motion for the motion work.
+Personal portfolio site with a database-backed admin panel. React 19 + TypeScript +
+Vite + Tailwind CSS v4 on the front, Vercel serverless functions + Prisma 7 + Neon
+Postgres behind it. Dark/light theme, cinematic gold treatment, Framer Motion.
+
+Every piece of copy, every image, every link and every list on the site is editable
+at `/admin` — no redeploy needed.
 
 ```bash
 npm install
-npm run dev        # local dev server
-npm run build      # production build into dist/
-npm run preview    # serve the production build
-npm run typecheck  # TypeScript, no emit
-npm run lint       # oxlint
+npm run dev              # Vite only: the site, using the bundled fallback content
+npm run dev:full         # vercel dev: the site AND the /api functions + admin panel
+npm run build            # production build into dist/
+npm run preview          # serve the production build
+npm run typecheck        # TypeScript across src, api and prisma
+npm run lint             # oxlint
+
+npm run db:migrate       # create/apply migrations (development)
+npm run db:seed          # load the current site copy into the database
+npm run admin:bootstrap  # create the single owner account
+npm run db:studio        # browse the database
 ```
+
+---
+
+## First-time setup
+
+### 1. Create a Neon database
+
+1. Sign up at [neon.tech](https://neon.tech) and create a project (the free tier is
+   enough). **Use your own project — never a colleague’s.**
+2. Open **Connection Details** on the project dashboard and copy **two** strings:
+   - the **Pooled** connection (its host contains `-pooler`) → `DATABASE_URL`
+   - the **Direct** connection (no `-pooler`) → `DIRECT_URL`
+
+The pooled string is what the serverless functions use; a direct connection would
+leak a Postgres backend on every invocation. The direct string is used only by
+`prisma migrate` and the seed.
+
+### 2. Fill in `.env`
+
+Copy `.env.example` to `.env` and set every value. Generate the session secret with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+### 3. Create the schema, load your content, create your account
+
+```bash
+npm run db:migrate       # creates the tables
+npm run db:seed          # loads the site exactly as it reads today
+npm run admin:bootstrap  # creates the owner account from ADMIN_* in .env
+```
+
+The seed is a lift-and-shift of the current copy, so the first page load after
+seeding is identical to what is live now. It is idempotent — re-running it restores
+the seeded rows and leaves anything you created yourself alone.
+
+### 4. Sign in
+
+```bash
+npm run dev:full
+```
+
+Open <http://localhost:3000/admin/login>. The first sign-in forces two-factor
+enrollment: scan the QR code with Google Authenticator (or 1Password, Authy, any
+TOTP app) and **save the ten recovery codes** — they are stored hashed and are never
+shown again.
+
+Once that is done, remove `ADMIN_INITIAL_PASSWORD` from your hosted environment.
+
+> `npm run dev` runs Vite alone. The site renders perfectly from the bundled
+> fallback content, but `/api` does not exist, so the admin panel cannot sign in.
+> Use `npm run dev:full` (needs `npm i -g vercel`) when you want the admin panel.
+
+---
+
+## The admin panel
+
+At `/admin`, behind password + mandatory TOTP.
+
+| Screen | Edits |
+|---|---|
+| **Overview** | Draft count, project count, unread messages, recent activity |
+| **Profile** | Name, initials, title, location, email, phone, biography, About bullets, contact pitch |
+| **Hero** | Both headline lines, availability pill, role line, paragraph, both buttons, side quote, typewriter lines |
+| **About & stats** | The four headline metrics |
+| **Services** | Service cards and the delivery-guarantee strip |
+| **Projects** | Cards, tech chips, metrics, links, plus optional case-study fields and highlights |
+| **Skills** | The bento cards and every chip inside them |
+| **Career** | Experience and education on one timeline, with optional achievement bullets |
+| **Contact links** | Email, phone, GitHub, LinkedIn — and any others you add |
+| **Sections** | Every eyebrow and two-line headline |
+| **Navigation** | The header menu |
+| **Appearance** | Default theme, accent colours, portrait, watermark, hero video, favicon, logo |
+| **Media** | Upload images, the resume PDF and video to Vercel Blob |
+| **SEO** | Title, description, keywords, share image, indexing, footer credit, JSON-LD |
+| **Inbox** | Contact form submissions |
+| **Audit** | Every administrative action, with secrets redacted |
+| **Security** | Change password, regenerate recovery codes, sign out everywhere |
+
+### Draft → Publish
+
+Saving writes a **draft**. The live site keeps showing the last **published**
+snapshot until you press **Publish** on that section, or **Publish all** in the
+header. Check a draft first at `/preview` — owner-only and never indexed.
+
+### How edits reach the live site
+
+`/api/content` is served `no-store`, and the portfolio refetches it on load and
+whenever the tab regains focus. Publish, then refresh the site — the change is there.
+No redeploy, no build step.
 
 ---
 
@@ -34,9 +135,13 @@ site is fully yours — no code changes needed, just keep the filenames the same
 
 ## Editing your content
 
-**All copy lives in one file: `src/data/profile.ts`.** Nothing is hardcoded in the
-components. Edit that file and everything updates — hero, about, services, projects,
-skills, experience, contact, and the structured data.
+**Day to day, edit at `/admin`.** The table below describes the fallback copy that
+is bundled into the build.
+
+`src/data/profile.ts` is no longer what the live site reads — it is the **fallback**.
+It paints on the first frame before the database responds, and it is what renders if
+Neon is ever unreachable. Keeping it roughly in sync is worthwhile but not required;
+`npm run db:seed` reads from it, so it is also the source for a fresh database.
 
 | Export | Drives |
 |---|---|
@@ -49,9 +154,9 @@ skills, experience, contact, and the structured data.
 | `skillBlocks` | The tech matrix bento grid |
 | `journey` | Experience + education timeline |
 
-Your name, job title and links are **also** in `index.html` — in the `<title>`, the
-meta description, the Open Graph tags, and the JSON-LD block that Google reads.
-Update those too when details change.
+`index.html` still carries the title, meta description, Open Graph tags and JSON-LD.
+Those are the crawler fallback for bots that do not run JavaScript; the SEO screen in
+the admin panel overwrites them client-side once the live content loads.
 
 ---
 
@@ -81,17 +186,15 @@ colour is a one-line edit in two places.
 
 ## Contact form
 
-By default the form opens the visitor's mail client with the message pre-filled —
-it works with zero setup and never silently loses an enquiry.
+Submissions POST to `/api/contact` and land in the **Inbox** screen of the admin
+panel. Protected by a honeypot field and a per-IP hourly rate limit; only a one-way
+hash of the address is stored, never the address itself.
 
-To receive submissions directly instead, create a free [Formspree](https://formspree.io)
-form and add a `.env` file:
+If `/api` is unreachable the form falls back to opening the visitor's mail client
+with the message pre-filled, so an enquiry is never silently lost.
 
-```
-VITE_CONTACT_ENDPOINT=https://formspree.io/f/YOUR_FORM_ID
-```
-
-Rebuild and the form POSTs there instead.
+Setting `VITE_CONTACT_ENDPOINT` to a [Formspree](https://formspree.io) URL overrides
+the built-in inbox.
 
 ---
 
@@ -99,8 +202,20 @@ Rebuild and the form POSTs there instead.
 
 1. Push this folder to a GitHub repository.
 2. On [vercel.com](https://vercel.com) → **Add New → Project** → import that repo.
-3. Vercel detects Vite automatically (build `npm run build`, output `dist`). Deploy.
-4. If you set `VITE_CONTACT_ENDPOINT`, add it under **Settings → Environment Variables**.
+3. Under **Settings → Environment Variables** add, for Production and Preview:
+   `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `SITE_URL`, `TOTP_ISSUER`,
+   `MEDIA_PROVIDER=vercel-blob`, plus `ADMIN_NAME` / `ADMIN_EMAIL` /
+   `ADMIN_INITIAL_PASSWORD` for the first bootstrap only.
+4. Under **Storage**, create a **Blob** store and connect it to the project. Vercel
+   injects `BLOB_READ_WRITE_TOKEN` automatically.
+5. Deploy. `prisma generate` runs in `postinstall`, and `vercel.json` handles the SPA
+   rewrite so `/admin` does not 404 on a hard refresh.
+6. Run `npm run db:migrate:deploy` and `npm run admin:bootstrap` once against the
+   production database, then delete `ADMIN_INITIAL_PASSWORD` and redeploy.
+
+The four serverless functions are `/api/content`, `/api/contact`,
+`/api/auth/[action]` and `/api/admin/[...route]` — comfortably inside the Hobby
+plan's twelve-function limit.
 
 **After you have a real domain,** replace `https://sayedmuhammad.dev/` everywhere in
 `index.html` (canonical link, `og:url`, image URLs) and `siteUrl` in

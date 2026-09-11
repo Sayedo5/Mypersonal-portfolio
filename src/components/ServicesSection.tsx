@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { guarantees, services } from '../data/profile';
+import { useContent } from '../content/ContentProvider';
 import { SectionHeader } from './SectionHeader';
 
 const containerVariants: Variants = {
@@ -19,7 +19,11 @@ const cardVariants: Variants = {
   },
 };
 
-export const ServicesSection: React.FC = () => (
+export const ServicesSection: React.FC = () => {
+  const { services, guarantees, sections } = useContent();
+  const section = sections.services;
+
+  return (
   <section
     id="services"
     className="relative w-full bg-bg text-fg py-20 sm:py-24 px-5 sm:px-8 lg:px-20 overflow-hidden"
@@ -31,11 +35,11 @@ export const ServicesSection: React.FC = () => (
 
     <div className="max-w-7xl mx-auto w-full relative z-10">
       <SectionHeader
-        eyebrow="02 / HOW WE WORK"
-        titleTop="WHAT I BUILD"
-        titleBottom="FOR CLIENTS."
-        lede="Three ways clients bring me in. Each one ends with something running in production — not a prototype, and not a handover document."
-        ledeAside
+        eyebrow={section.eyebrow}
+        titleTop={section.titleTop}
+        titleBottom={section.titleBottom}
+        lede={section.lede ?? undefined}
+        ledeAside={section.ledeAside}
         className="mb-12 lg:mb-16"
       />
 
@@ -123,6 +127,7 @@ export const ServicesSection: React.FC = () => (
       </motion.div>
     </div>
   </section>
-);
+  );
+};
 
 export default ServicesSection;

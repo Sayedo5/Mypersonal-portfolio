@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import aboutImg from '../assets/about.jpg';
-import { profile, stats } from '../data/profile';
+import { useContent } from '../content/ContentProvider';
 import { SectionHeader } from './SectionHeader';
 
 const containerVariants: Variants = {
@@ -20,13 +20,10 @@ const fadeUpVariants: Variants = {
   },
 };
 
-const valueProps = [
-  'Unified architecture — a Next.js portal, an Expo app and a Node API on one database.',
-  'Web-to-mobile conversion without rewriting your core business logic.',
-  'Strict TypeScript from the Prisma schema through to the UI props.',
-];
-
 export const AboutSection: React.FC = () => {
+  const { profile, stats, theme, sections } = useContent();
+  const section = sections.about;
+  const valueProps = profile.workingPrinciples;
   const cardRef = useRef<HTMLDivElement>(null);
   const [isCardHovered, setIsCardHovered] = useState(false);
 
@@ -80,9 +77,11 @@ export const AboutSection: React.FC = () => {
 
       <div className="max-w-7xl mx-auto w-full relative z-10">
         <SectionHeader
-          eyebrow="01 / ABOUT ME"
-          titleTop="ONE ENGINEER."
-          titleBottom="WEB, MOBILE & API."
+          eyebrow={section.eyebrow}
+          titleTop={section.titleTop}
+          titleBottom={section.titleBottom}
+          lede={section.lede ?? undefined}
+          ledeAside={section.ledeAside}
           className="mb-12 lg:mb-16"
         />
 
@@ -101,7 +100,7 @@ export const AboutSection: React.FC = () => {
               className="font-body text-[13px] sm:text-[14.5px] font-light text-fg-muted leading-[1.9] mb-8 max-w-xl"
             >
               I&apos;m <span className="text-gold font-medium">{profile.name}</span>, a full-stack web
-              and mobile developer based in {profile.location}. {profile.bio}
+              and mobile developer based in {profile.location}. {profile.longBiography}
             </motion.p>
 
             <motion.ul variants={fadeUpVariants} className="space-y-3 mb-10 max-w-xl">
@@ -183,8 +182,8 @@ export const AboutSection: React.FC = () => {
 
               <div className="relative overflow-hidden w-full aspect-4/5 bg-bg rounded-[2px]">
                 <img
-                  src={aboutImg}
-                  alt={`${profile.name}, ${profile.role}`}
+                  src={theme.portraitUrl ?? aboutImg}
+                  alt={`${profile.name}, ${profile.professionalTitle}`}
                   loading="lazy"
                   width={800}
                   height={1000}

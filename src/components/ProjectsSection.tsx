@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import ScrollStack, { ScrollStackItem } from './ScrollStack';
-import { profile, projects } from '../data/profile';
+import { useContent } from '../content/ContentProvider';
+import type { ProjectContent } from '../data/content-types';
 import { SectionHeader } from './SectionHeader';
 import { ButtonLink } from './Button';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
-type Project = (typeof projects)[number];
+type Project = ProjectContent;
 
 /**
  * A single project card. Rendered inside the ScrollStack deck on desktop
@@ -45,6 +46,38 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
         <p className="font-body text-[12.5px] sm:text-[14px] font-light text-fg-muted leading-[1.85] mb-7 max-w-2xl">
           {project.description}
         </p>
+
+        {/* Case-study detail and gallery. Both are empty on the seeded
+            projects, so the card renders exactly as it did before. */}
+        {project.highlights.length > 0 && (
+          <ul className="space-y-2.5 mb-7 max-w-2xl">
+            {project.highlights.map((highlight) => (
+              <li
+                key={highlight.text}
+                className="flex items-start gap-2.5 font-body text-[12px] font-light text-fg-muted leading-relaxed"
+              >
+                <span className="text-gold mt-px shrink-0" aria-hidden="true">
+                  ✦
+                </span>
+                {highlight.text}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {project.images.length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-7">
+            {project.images.map((image) => (
+              <img
+                key={image.url}
+                src={image.url}
+                alt={image.altText}
+                loading="lazy"
+                className="h-28 w-auto rounded-[2px] border border-line object-cover"
+              />
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2 mt-auto pt-5 border-t border-line-soft">
           {project.tech.map((t) => (
@@ -95,6 +128,10 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
 );
 
 export const ProjectsSection: React.FC = () => {
+  const { projects, socialLinks, sections } = useContent();
+  const section = sections.work;
+  const github = socialLinks.find((link) => link.platform.toLowerCase() === 'github');
+
   // The stacking deck needs real scroll runway and a fine pointer; below
   // that it degrades into a janky, hard-to-read experience.
   const useDeck = useMediaQuery('(min-width: 1024px)');
@@ -111,11 +148,11 @@ export const ProjectsSection: React.FC = () => {
 
       <div className="max-w-7xl mx-auto w-full relative z-10">
         <SectionHeader
-          eyebrow="03 / FEATURED WORK"
-          titleTop="SHIPPED TO"
-          titleBottom="PRODUCTION."
-          lede="Real products with the scope, stack and numbers attached — no concept pieces."
-          ledeAside
+          eyebrow={section.eyebrow}
+          titleTop={section.titleTop}
+          titleBottom={section.titleBottom}
+          lede={section.lede ?? undefined}
+          ledeAside={section.ledeAside}
           className="mb-12 lg:mb-16"
         />
 
@@ -151,17 +188,19 @@ export const ProjectsSection: React.FC = () => {
           </div>
         )}
 
-        <p className="font-body text-[11.5px] font-light text-fg-muted mt-8">
-          More repositories and work in progress on{' '}
-          <a
-            href={profile.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gold hover:underline underline-offset-4 transition-colors"
-          >
-            {profile.githubLabel} ↗
-          </a>
-        </p>
+        {github && (
+          <p className="font-body text-[11.5px] font-light text-fg-muted mt-8">
+            More repositories and work in progress on{' '}
+            <a
+              href={github.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold hover:underline underline-offset-4 transition-colors"
+            >
+              {github.value} ↗
+            </a>
+          </p>
+        )}
       </div>
     </section>
   );

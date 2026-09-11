@@ -1,56 +1,77 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { profile } from '../data/profile';
+import { useContent } from '../content/ContentProvider';
+import { apiFetch } from '../lib/api';
 import { SectionHeader } from './SectionHeader';
 import { Button } from './Button';
 
 /**
- * Optional form backend. Set VITE_CONTACT_ENDPOINT in .env to a Formspree
- * (or similar) URL and the form POSTs there. With no endpoint configured the
- * form falls back to opening the visitor's mail client with the message
- * pre-filled — so it never silently swallows an enquiry.
+ * Submissions go to the built-in inbox at /api/contact, readable in the
+ * admin panel. VITE_CONTACT_ENDPOINT still overrides it (Formspree and
+ * friends), and if neither is reachable the form falls back to opening the
+ * visitor's mail client — so an enquiry is never silently swallowed.
  */
 const ENDPOINT = import.meta.env.VITE_CONTACT_ENDPOINT as string | undefined;
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
-const channels = [
-  { label: 'EMAIL', value: profile.email, href: `mailto:${profile.email}` },
-  { label: 'PHONE', value: profile.phone, href: `tel:${profile.phoneHref}` },
-  { label: 'GITHUB', value: profile.githubLabel, href: profile.github, external: true },
-  { label: 'LINKEDIN', value: profile.linkedinLabel, href: profile.linkedin, external: true },
-];
-
 const fieldClass =
   'w-full bg-surface-2 border border-line focus:border-gold text-fg placeholder:text-fg-subtle/70 font-body text-[12.5px] px-4 py-3 outline-none rounded-[2px] transition-colors';
 
 export const ContactSection: React.FC = () => {
+  const { profile, site, socialLinks, sections } = useContent();
+  const section = sections.contact;
+  const channels = socialLinks.map((link) => ({
+    label: link.label,
+    value: link.value,
+    href: link.url,
+    external: link.external,
+  }));
+
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  // Honeypot: off-screen, never filled in by a real visitor.
+  const [website, setWebsite] = useState('');
   const [status, setStatus] = useState<Status>('idle');
+  // True when we handed the message to the visitor's mail client instead
+  // of storing it, so the confirmation copy can say the right thing.
+  const [viaMail, setViaMail] = useState(false);
+
+  const mailtoFallback = () => {
+    setViaMail(true);
+    const subject = encodeURIComponent(`Project enquiry from ${formData.name}`);
+    const body = encodeURIComponent(
+      `${formData.message}\n\n—\n${formData.name}\n${formData.email}`,
+    );
+    window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+    setStatus('sent');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('sending');
 
-    if (!ENDPOINT) {
-      const subject = encodeURIComponent(`Project enquiry from ${formData.name}`);
-      const body = encodeURIComponent(
-        `${formData.message}\n\n—\n${formData.name}\n${formData.email}`,
-      );
-      window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
-      setStatus('sent');
+    if (ENDPOINT) {
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        setStatus(res.ok ? 'sent' : 'error');
+      } catch {
+        setStatus('error');
+      }
       return;
     }
 
     try {
-      const res = await fetch(ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      setStatus(res.ok ? 'sent' : 'error');
+      await apiFetch('/api/contact', { method: 'POST', body: { ...formData, website } });
+      setStatus('sent');
     } catch {
-      setStatus('error');
+      // The inbox is unreachable (offline, or `vite` running without the
+      // serverless functions). Hand the message to the mail client rather
+      // than lose it.
+      mailtoFallback();
     }
   };
 
@@ -70,9 +91,11 @@ export const ContactSection: React.FC = () => {
           {/* ---------- Left: pitch + channels ---------- */}
           <div className="lg:col-span-5">
             <SectionHeader
-              eyebrow="06 / CONTACT"
-              titleTop="LET'S BUILD"
-              titleBottom="SOMETHING."
+              eyebrow={section.eyebrow}
+              titleTop={section.titleTop}
+              titleBottom={section.titleBottom}
+              lede={section.lede ?? undefined}
+              ledeAside={section.ledeAside}
               className="mb-7"
             />
 
@@ -135,13 +158,25 @@ export const ContactSection: React.FC = () => {
                   MESSAGE ON ITS WAY
                 </h3>
                 <p className="font-body text-[12.5px] font-light text-fg-muted max-w-sm mx-auto leading-relaxed">
-                  {ENDPOINT
-                    ? 'Thanks for reaching out — I reply within 24 hours.'
-                    : `Your mail client should have opened. If it didn't, email me directly at ${profile.email}.`}
+                  {viaMail
+                    ? `Your mail client should have opened. If it didn't, email me directly at ${profile.email}.`
+                    : 'Thanks for reaching out — I reply within 24 hours.'}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Honeypot — hidden from people, irresistible to bots. */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  className="absolute left-[-9999px] h-px w-px opacity-0"
+                />
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label htmlFor="contact-name" className="label-mono block text-fg-subtle mb-2">
@@ -220,7 +255,8 @@ export const ContactSection: React.FC = () => {
             {profile.name} // {profile.location}
           </span>
           <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-fg-subtle">
-            © {new Date().getFullYear()} • BUILT WITH REACT, TYPESCRIPT &amp; TAILWIND
+            © {new Date().getFullYear()}
+            {site.footerCreditLine ? ` • ${site.footerCreditLine}` : ''}
           </span>
         </div>
       </div>

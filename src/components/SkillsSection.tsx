@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { skillBlocks } from '../data/profile';
+import { useContent } from '../content/ContentProvider';
 import { SectionHeader } from './SectionHeader';
 
 const containerVariants: Variants = {
@@ -19,7 +19,11 @@ const cardVariants: Variants = {
   },
 };
 
-export const SkillsSection: React.FC = () => (
+export const SkillsSection: React.FC = () => {
+  const { skillBlocks, sections } = useContent();
+  const section = sections.skills;
+
+  return (
   <section
     id="skills"
     className="relative w-full bg-bg text-fg py-16 sm:py-20 px-5 sm:px-8 lg:px-20 overflow-hidden"
@@ -31,10 +35,11 @@ export const SkillsSection: React.FC = () => (
 
     <div className="max-w-7xl mx-auto w-full relative z-10">
       <SectionHeader
-        eyebrow="04 / TECH MATRIX"
-        titleTop="THE FULL STACK."
-        titleBottom="END TO END."
-        lede="No logo wall of tools read about once. Everything listed here is in a codebase I have delivered to production."
+        eyebrow={section.eyebrow}
+        titleTop={section.titleTop}
+        titleBottom={section.titleBottom}
+        lede={section.lede ?? undefined}
+        ledeAside={section.ledeAside}
         className="mb-12"
       />
 
@@ -85,6 +90,7 @@ export const SkillsSection: React.FC = () => (
       </motion.div>
     </div>
   </section>
-);
+  );
+};
 
 export default SkillsSection;
