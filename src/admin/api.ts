@@ -17,7 +17,22 @@ export type AdminRow = Record<string, unknown> & {
 };
 
 const auth = (action: string) => `/api/auth/${action}`;
-const admin = (path: string) => `/api/admin/${path}`;
+
+/**
+ * The admin endpoint is addressed by query parameter, not path segment:
+ * Vercel resolves only one dynamic segment for a non-Next project, so
+ * `/api/admin/hero/publish` never reached the function.
+ */
+const admin = (
+  resource: string,
+  options: { id?: string; action?: string; query?: Record<string, string> } = {},
+) => {
+  const params = new URLSearchParams({ resource });
+  if (options.id) params.set('id', options.id);
+  if (options.action) params.set('action', options.action);
+  for (const [key, value] of Object.entries(options.query ?? {})) params.set(key, value);
+  return `/api/admin?${params.toString()}`;
+};
 
 export const authApi = {
   session: () => apiFetch<SessionView>(auth('session')),
@@ -62,23 +77,23 @@ export const adminApi = {
 
   get: <T = AdminRow>(entity: string) => apiFetch<T>(admin(entity)),
   list: <T = AdminRow>(entity: string) => apiFetch<T[]>(admin(entity)),
-  one: <T = AdminRow>(entity: string, id: string) => apiFetch<T>(admin(`${entity}/${id}`)),
+  one: <T = AdminRow>(entity: string, id: string) => apiFetch<T>(admin(entity, { id })),
 
   updateSingleton: <T = AdminRow>(entity: string, body: unknown) =>
     apiFetch<T>(admin(entity), { method: 'PUT', body }),
   create: <T = AdminRow>(entity: string, body: unknown) =>
     apiFetch<T>(admin(entity), { method: 'POST', body }),
   update: <T = AdminRow>(entity: string, id: string, body: unknown) =>
-    apiFetch<T>(admin(`${entity}/${id}`), { method: 'PUT', body }),
+    apiFetch<T>(admin(entity, { id }), { method: 'PUT', body }),
   remove: (entity: string, id: string) =>
-    apiFetch<{ deleted: boolean }>(admin(`${entity}/${id}`), { method: 'DELETE' }),
+    apiFetch<{ deleted: boolean }>(admin(entity, { id }), { method: 'DELETE' }),
   reorder: (entity: string, ids: string[]) =>
-    apiFetch<{ reordered: number }>(admin(`${entity}/reorder`), { method: 'POST', body: { ids } }),
+    apiFetch<{ reordered: number }>(admin(entity, { action: 'reorder' }), { method: 'POST', body: { ids } }),
 
   publishSingleton: (entity: string) =>
-    apiFetch<{ id: string; publishedAt: string }>(admin(`${entity}/publish`), { method: 'POST' }),
+    apiFetch<{ id: string; publishedAt: string }>(admin(entity, { action: 'publish' }), { method: 'POST' }),
   publishRow: (entity: string, id: string) =>
-    apiFetch<{ id: string; publishedAt: string }>(admin(`${entity}/${id}/publish`), {
+    apiFetch<{ id: string; publishedAt: string }>(admin(entity, { id, action: 'publish' }), {
       method: 'POST',
     }),
   publishAll: () =>
@@ -100,7 +115,7 @@ export const adminApi = {
       >(admin('media')),
     uploadToken: () =>
       apiFetch<{ token: string; allowedContentTypes: string[]; pathPrefix: string }>(
-        admin('media/upload-token'),
+        admin('media', { action: 'upload-token' }),
         { method: 'POST' },
       ),
     register: (body: {
@@ -112,8 +127,8 @@ export const adminApi = {
       altText: string | null;
     }) => apiFetch<{ id: string; publicUrl: string }>(admin('media'), { method: 'POST', body }),
     setAlt: (id: string, altText: string | null) =>
-      apiFetch(admin(`media/${id}`), { method: 'PUT', body: { altText } }),
-    remove: (id: string) => apiFetch(admin(`media/${id}`), { method: 'DELETE' }),
+      apiFetch(admin('media', { id }), { method: 'PUT', body: { altText } }),
+    remove: (id: string) => apiFetch(admin('media', { id }), { method: 'DELETE' }),
   },
 
   inbox: {
@@ -129,10 +144,10 @@ export const adminApi = {
           status: 'UNREAD' | 'READ' | 'ARCHIVED';
           createdAt: string;
         }[]
-      >(admin(`inbox?status=${status}`)),
+      >(admin('inbox', { query: { status } })),
     setStatus: (id: string, status: 'UNREAD' | 'READ' | 'ARCHIVED') =>
-      apiFetch(admin(`inbox/${id}`), { method: 'PUT', body: { status } }),
-    remove: (id: string) => apiFetch(admin(`inbox/${id}`), { method: 'DELETE' }),
+      apiFetch(admin('inbox', { id }), { method: 'PUT', body: { status } }),
+    remove: (id: string) => apiFetch(admin('inbox', { id }), { method: 'DELETE' }),
   },
 
   audit: (take = 100) =>
@@ -145,5 +160,5 @@ export const adminApi = {
         createdAt: string;
         ownerUser: { name: string; email: string } | null;
       }[]
-    >(admin(`audit?take=${take}`)),
+    >(admin('audit', { query: { take: String(take) } })),
 };

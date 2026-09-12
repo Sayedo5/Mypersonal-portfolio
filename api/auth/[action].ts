@@ -22,6 +22,7 @@ import {
   parseOrThrow,
   readBody,
   requireMethod,
+  routeSegments,
   sendOk,
   withApi,
 } from '../_lib/http.js';
@@ -348,8 +349,11 @@ const ROUTES = {
 } as const;
 
 export default withApi(async function handler(req: VercelRequest, res: VercelResponse) {
+  // Same fallback as the admin router: never depend on the dynamic route
+  // parameter being populated by the runtime.
   const raw = req.query.action;
-  const action = (Array.isArray(raw) ? raw[0] : raw) ?? '';
+  const fromQuery = (Array.isArray(raw) ? raw[0] : raw) ?? '';
+  const action = fromQuery || (routeSegments(req, 'action', '/api/auth')[0] ?? '');
 
   const route = ROUTES[action as keyof typeof ROUTES];
   if (!route) throw new HttpError('NOT_FOUND', 'Unknown auth action.');

@@ -74,7 +74,7 @@ const MediaPicker: React.FC<{
   const selected = assets.find((asset) => asset.id === value);
 
   return (
-    <div className="flex items-start gap-3">
+    <div className="ad-row">
       <Select value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
         <option value="">— none (use the bundled default) —</option>
         {options.map((asset) => (
@@ -88,7 +88,7 @@ const MediaPicker: React.FC<{
         <img
           src={selected.publicUrl}
           alt=""
-          className="h-12 w-12 shrink-0 rounded-[2px] border border-line object-cover"
+          className="ad-thumb"
         />
       )}
     </div>
@@ -110,7 +110,7 @@ export const FieldRenderer: React.FC<{
 
   if (field.type === 'toggle') {
     return (
-      <div className={field.full ? 'sm:col-span-2' : ''}>
+      <div className={field.full ? 'ad-field--wide' : ''}>
         <Toggle
           checked={value === true}
           onChange={set}
@@ -118,7 +118,7 @@ export const FieldRenderer: React.FC<{
           help={field.help}
         />
         {errors?.map((error) => (
-          <p key={error} className="mt-1 font-body text-[11px] text-red-400" role="alert">
+          <p key={error} className="ad-error" role="alert">
             {error}
           </p>
         ))}
@@ -179,11 +179,11 @@ export const FieldRenderer: React.FC<{
         const update = (next: { kind: string; text: string }[]) => set(next);
 
         return (
-          <div className="space-y-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {items.map((item, index) => (
-              <div key={index} className="flex items-start gap-2">
+              <div key={index} className="ad-row">
                 <Select
-                  className="!w-36 shrink-0"
+                  style={{ width: 150, flexShrink: 0 }}
                   value={item.kind}
                   onChange={(e) =>
                     update(
@@ -207,7 +207,7 @@ export const FieldRenderer: React.FC<{
                   type="button"
                   aria-label="Remove"
                   onClick={() => update(items.filter((_, i) => i !== index))}
-                  className="mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-[2px] border border-line bg-surface-2 text-[11px] text-fg-muted transition-colors hover:border-gold hover:text-gold"
+                  className="ad-icon-btn"
                 >
                   ✕
                 </button>
@@ -216,7 +216,7 @@ export const FieldRenderer: React.FC<{
             <button
               type="button"
               onClick={() => update([...items, { kind: 'CAPABILITY', text: '' }])}
-              className="font-body text-[11.5px] text-gold hover:underline underline-offset-4"
+              className="ad-link"
             >
               + Add highlight
             </button>
@@ -239,7 +239,7 @@ export const FieldRenderer: React.FC<{
             id={id}
             rows={field.rows ?? 10}
             spellCheck={false}
-            className="font-mono text-[11.5px]"
+            className="ad-mono"
             value={
               typeof value === 'string' ? value : value ? JSON.stringify(value, null, 2) : ''
             }
@@ -249,12 +249,12 @@ export const FieldRenderer: React.FC<{
 
       case 'color':
         return (
-          <div className="flex items-center gap-3">
+          <div className="ad-row" style={{ alignItems: 'center' }}>
             <input
               type="color"
               value={str(value) || '#000000'}
               onChange={(e) => set(e.target.value.toUpperCase())}
-              className="h-10 w-12 cursor-pointer rounded-[2px] border border-line bg-surface-2"
+              style={{ height: 36, width: 46, cursor: 'pointer', borderRadius: 7, border: '1px solid var(--ad-border-strong)', background: 'var(--ad-surface)', padding: 2 }}
             />
             <TextInput value={str(value)} onChange={(e) => set(e.target.value.toUpperCase())} />
           </div>
@@ -284,7 +284,7 @@ export const FieldRenderer: React.FC<{
   })();
 
   return (
-    <div className={field.full ? 'sm:col-span-2' : ''}>
+    <div className={field.full ? 'ad-field--wide' : ''}>
       <Field label={field.label} htmlFor={id} help={field.help} errors={errors}>
         {body}
       </Field>
@@ -298,7 +298,7 @@ export const FieldGrid: React.FC<{
   errors?: Record<string, string[]>;
   onChange: (name: string, next: unknown) => void;
 }> = ({ fields, values, errors, onChange }) => (
-  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+  <div className="ad-field-grid">
     {fields.map((field) => (
       <FieldRenderer
         key={field.name}

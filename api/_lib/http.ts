@@ -121,12 +121,34 @@ export function clientUserAgent(req: VercelRequest): string | null {
   return (Array.isArray(value) ? value[0] : value) ?? null;
 }
 
-/** Path segments after the function's mount point, e.g. /api/admin/a/b -> ['a','b']. */
-export function routeSegments(req: VercelRequest, key = 'route'): string[] {
+/**
+ * Path segments after the function's mount point, e.g. /api/admin/a/b -> ['a','b'].
+ *
+ * The catch-all parameter from `[...route].ts` is preferred, but it is not
+ * always populated — `vercel dev` in particular leaves `req.query.route`
+ * empty, which made every admin call resolve to the empty resource name.
+ * Parsing `req.url` is the reliable fallback and behaves identically in dev
+ * and production.
+ */
+export function routeSegments(req: VercelRequest, key = 'route', basePath?: string): string[] {
   const value = req.query[key];
-  if (Array.isArray(value)) return value.filter(Boolean);
+  if (Array.isArray(value) && value.length) return value.filter(Boolean);
   if (typeof value === 'string' && value) return value.split('/').filter(Boolean);
-  return [];
+
+  const path = (req.url ?? '').split('?')[0] ?? '';
+  const prefix = basePath ?? '';
+  const relative = prefix && path.startsWith(prefix) ? path.slice(prefix.length) : path;
+
+  return relative
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment);
+      } catch {
+        return segment;
+      }
+    });
 }
 
 type Handler = (req: VercelRequest, res: VercelResponse) => Promise<void> | void;

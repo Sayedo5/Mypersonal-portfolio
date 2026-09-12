@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
+import './admin.css';
+
 import { authApi, type SessionView } from './api';
 import AdminShell from './components/AdminShell';
 import { Banner } from './components/ui';
@@ -64,8 +66,10 @@ export const AdminApp: React.FC = () => {
 
   if (!session) {
     return (
-      <div className="grid min-h-screen place-items-center bg-bg text-fg-subtle">
-        <span className="label-mono">Checking your session…</span>
+      <div className="ad">
+        <div className="ad-auth">
+          <p className="ad-help">Checking your session…</p>
+        </div>
       </div>
     );
   }
@@ -74,7 +78,7 @@ export const AdminApp: React.FC = () => {
     return (
       <>
         {error && (
-          <div className="fixed inset-x-4 top-4 z-50 mx-auto max-w-lg">
+          <div className="ad" style={{ position: 'fixed', insetInline: 16, top: 16, zIndex: 50, maxWidth: 520, marginInline: 'auto', background: 'transparent', minHeight: 0 }}>
             <Banner tone="error">{error}</Banner>
           </div>
         )}

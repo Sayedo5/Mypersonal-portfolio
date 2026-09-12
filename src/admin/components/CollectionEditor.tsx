@@ -222,41 +222,38 @@ export const CollectionEditor: React.FC<Props> = ({
       }
     >
       {banner && (
-        <div className="mb-5">
+        <div style={{ marginBottom: 18 }}>
           <Banner tone={banner.tone}>{banner.text}</Banner>
         </div>
       )}
 
       {loading ? (
-        <p className="font-body text-[12px] text-fg-subtle">Loading…</p>
+        <p className="ad-help">Loading…</p>
       ) : rows.length === 0 ? (
         <EmptyState>Nothing here yet.</EmptyState>
       ) : (
-        <ul className="space-y-2">
+        <ul className="ad-list">
           {rows.map((row, index) => {
             const open = openId === row.id;
 
             return (
-              <li key={row.id} className="rounded-[2px] border border-line bg-surface-2/60">
-                <div className="flex flex-wrap items-center gap-3 p-3">
+              <li key={row.id} className="ad-item">
+                <div className="ad-item-head">
                   <button
                     type="button"
                     onClick={() => setOpenId(open ? null : row.id)}
-                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    className="ad-item-toggle"
                     aria-expanded={open}
                   >
-                    <span
-                      className="font-mono text-[10px] text-fg-subtle"
-                      aria-hidden="true"
-                    >
+                    <span className="ad-caret" aria-hidden="true">
                       {open ? '▾' : '▸'}
                     </span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-body text-[13px] text-fg">
+                    <span style={{ minWidth: 0 }}>
+                      <span className="ad-item-title" style={{ display: 'block' }}>
                         {titleOf(row) || '(untitled)'}
                       </span>
                       {subtitleOf && (
-                        <span className="block truncate font-body text-[11px] font-light text-fg-subtle">
+                        <span className="ad-item-sub" style={{ display: 'block' }}>
                           {subtitleOf(row)}
                         </span>
                       )}
@@ -266,12 +263,10 @@ export const CollectionEditor: React.FC<Props> = ({
                   <StatusPill published={row.__published} />
 
                   {row.visible === false && (
-                    <span className="rounded-[2px] border border-line px-2 py-0.5 font-body text-[8.5px] uppercase tracking-[0.16em] text-fg-subtle">
-                      Hidden
-                    </span>
+                    <span className="ad-chip ad-chip--muted">Hidden</span>
                   )}
 
-                  <div className="flex shrink-0 gap-1">
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 'auto' }}>
                     <IconButton label="Move up" onClick={() => move(index, -1)} disabled={index === 0}>
                       ↑
                     </IconButton>
@@ -291,7 +286,7 @@ export const CollectionEditor: React.FC<Props> = ({
                 </div>
 
                 {open && (
-                  <div className="border-t border-line-soft p-4 sm:p-5">
+                  <div className="ad-item-body">
                     <FieldGrid
                       fields={fields}
                       values={row}
@@ -299,7 +294,7 @@ export const CollectionEditor: React.FC<Props> = ({
                       onChange={(name, next) => change(row.id, name, next)}
                     />
 
-                    <div className="mt-5 flex flex-wrap gap-2">
+                    <div className="ad-actions" style={{ marginTop: 18 }}>
                       <ActionButton onClick={() => void save(row.id)} loading={busyId === row.id}>
                         Save draft
                       </ActionButton>

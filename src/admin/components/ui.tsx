@@ -1,18 +1,16 @@
 import React from 'react';
 
 /**
- * Admin form primitives.
+ * Admin form and layout primitives.
  *
- * They deliberately reuse the portfolio's own tokens — `surface`, `line`,
- * `gold`, `font-body`, `label-mono` — so the panel looks like it belongs to
- * the site rather than like a bolted-on dashboard. None of this CSS touches
- * the public pages.
+ * All styling comes from `admin.css`, scoped under `.ad`. Nothing here reads
+ * the portfolio's tokens, so the dashboard can look like a tool without the
+ * public site changing at all.
  */
 
-export const inputClass =
-  'w-full bg-surface-2 border border-line focus:border-gold text-fg placeholder:text-fg-subtle/60 font-body text-[13px] px-3.5 py-2.5 outline-none rounded-[2px] transition-colors disabled:opacity-50';
+export const inputClass = 'ad-input';
 
-type LabelProps = {
+type FieldProps = {
   label: string;
   htmlFor?: string;
   help?: string;
@@ -20,32 +18,35 @@ type LabelProps = {
   children: React.ReactNode;
 };
 
-export const Field: React.FC<LabelProps> = ({ label, htmlFor, help, errors, children }) => (
-  <div className="space-y-1.5">
-    <label htmlFor={htmlFor} className="label-mono block text-fg-subtle">
+export const Field: React.FC<FieldProps> = ({ label, htmlFor, help, errors, children }) => (
+  <div>
+    <label htmlFor={htmlFor} className="ad-label">
       {label}
     </label>
     {children}
-    {help && <p className="font-body text-[11px] font-light text-fg-subtle/80">{help}</p>}
+    {help && <p className="ad-help">{help}</p>}
     {errors?.map((error) => (
-      <p key={error} className="font-body text-[11px] text-red-400" role="alert">
+      <p key={error} className="ad-error" role="alert">
         {error}
       </p>
     ))}
   </div>
 );
 
-export const TextInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
-  <input {...props} className={`${inputClass} ${props.className ?? ''}`} />
-);
+export const TextInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({
+  className = '',
+  ...rest
+}) => <input {...rest} className={`ad-input ${className}`.trim()} />;
 
-export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => (
-  <textarea {...props} className={`${inputClass} resize-y ${props.className ?? ''}`} />
-);
+export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = ({
+  className = '',
+  ...rest
+}) => <textarea {...rest} className={`ad-textarea ${className}`.trim()} />;
 
-export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = (props) => (
-  <select {...props} className={`${inputClass} ${props.className ?? ''}`} />
-);
+export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({
+  className = '',
+  ...rest
+}) => <select {...rest} className={`ad-select ${className}`.trim()} />;
 
 export const Toggle: React.FC<{
   checked: boolean;
@@ -53,32 +54,41 @@ export const Toggle: React.FC<{
   label: string;
   help?: string;
 }> = ({ checked, onChange, label, help }) => (
-  <label className="flex cursor-pointer items-start gap-3 py-1">
+  <div className="ad-toggle">
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`mt-0.5 relative h-5 w-9 shrink-0 rounded-full border transition-colors ${
-        checked ? 'border-gold bg-gold/30' : 'border-line bg-surface-3'
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-3.5 w-3.5 rounded-full transition-all ${
-          checked ? 'left-[18px] bg-gold' : 'left-0.5 bg-fg-subtle'
-        }`}
-      />
-    </button>
-    <span className="min-w-0">
-      <span className="block font-body text-[12.5px] text-fg">{label}</span>
-      {help && (
-        <span className="block font-body text-[11px] font-light text-fg-subtle/80">{help}</span>
-      )}
+      className="ad-switch"
+    />
+    <span>
+      <span className="ad-toggle-text">{label}</span>
+      {help && <span className="ad-help" style={{ marginTop: 2, display: 'block' }}>{help}</span>}
     </span>
-  </label>
+  </div>
 );
 
-/** Editable list of plain strings (skills, bullet points, keywords). */
+export const IconButton: React.FC<{
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}> = ({ label, onClick, disabled, children }) => (
+  <button
+    type="button"
+    aria-label={label}
+    title={label}
+    onClick={onClick}
+    disabled={disabled}
+    className="ad-icon-btn"
+  >
+    {children}
+  </button>
+);
+
+/** Editable list of plain strings (skills, bullets, keywords). */
 export const StringListInput: React.FC<{
   value: string[];
   onChange: (next: string[]) => void;
@@ -98,9 +108,9 @@ export const StringListInput: React.FC<{
   };
 
   return (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {value.map((item, index) => (
-        <div key={index} className="flex items-start gap-2">
+        <div key={index} className="ad-row">
           {multiline ? (
             <TextArea
               rows={2}
@@ -115,32 +125,23 @@ export const StringListInput: React.FC<{
               onChange={(e) => set(index, e.target.value)}
             />
           )}
-          <div className="flex shrink-0 gap-1 pt-1">
-            <IconButton label="Move up" onClick={() => move(index, -1)} disabled={index === 0}>
-              ↑
-            </IconButton>
-            <IconButton
-              label="Move down"
-              onClick={() => move(index, 1)}
-              disabled={index === value.length - 1}
-            >
-              ↓
-            </IconButton>
-            <IconButton
-              label="Remove"
-              onClick={() => onChange(value.filter((_, i) => i !== index))}
-            >
-              ✕
-            </IconButton>
-          </div>
+          <IconButton label="Move up" onClick={() => move(index, -1)} disabled={index === 0}>
+            ↑
+          </IconButton>
+          <IconButton
+            label="Move down"
+            onClick={() => move(index, 1)}
+            disabled={index === value.length - 1}
+          >
+            ↓
+          </IconButton>
+          <IconButton label="Remove" onClick={() => onChange(value.filter((_, i) => i !== index))}>
+            ✕
+          </IconButton>
         </div>
       ))}
 
-      <button
-        type="button"
-        onClick={() => onChange([...value, ''])}
-        className="font-body text-[11.5px] text-gold hover:underline underline-offset-4"
-      >
+      <button type="button" onClick={() => onChange([...value, ''])} className="ad-link">
         + {addLabel}
       </button>
     </div>
@@ -154,9 +155,9 @@ export const PairListInput: React.FC<{
   labelPlaceholder?: string;
   valuePlaceholder?: string;
 }> = ({ value, onChange, labelPlaceholder = 'Label', valuePlaceholder = 'Value' }) => (
-  <div className="space-y-2">
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
     {value.map((pair, index) => (
-      <div key={index} className="flex items-start gap-2">
+      <div key={index} className="ad-row">
         <TextInput
           value={pair.label}
           placeholder={labelPlaceholder}
@@ -171,39 +172,19 @@ export const PairListInput: React.FC<{
             onChange(value.map((p, i) => (i === index ? { ...p, value: e.target.value } : p)))
           }
         />
-        <div className="pt-1">
-          <IconButton label="Remove" onClick={() => onChange(value.filter((_, i) => i !== index))}>
-            ✕
-          </IconButton>
-        </div>
+        <IconButton label="Remove" onClick={() => onChange(value.filter((_, i) => i !== index))}>
+          ✕
+        </IconButton>
       </div>
     ))}
     <button
       type="button"
       onClick={() => onChange([...value, { label: '', value: '' }])}
-      className="font-body text-[11.5px] text-gold hover:underline underline-offset-4"
+      className="ad-link"
     >
       + Add row
     </button>
   </div>
-);
-
-export const IconButton: React.FC<{
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-}> = ({ label, onClick, disabled, children }) => (
-  <button
-    type="button"
-    aria-label={label}
-    title={label}
-    onClick={onClick}
-    disabled={disabled}
-    className="grid h-8 w-8 place-items-center rounded-[2px] border border-line bg-surface-2 text-[11px] text-fg-muted transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
-  >
-    {children}
-  </button>
 );
 
 export const Panel: React.FC<{
@@ -212,45 +193,32 @@ export const Panel: React.FC<{
   actions?: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, description, actions, children }) => (
-  <section className="rounded-[2px] border border-line bg-surface/85 p-5 sm:p-7">
+  <section className="ad-card">
     {(title || actions) && (
-      <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+      <header className="ad-card-head">
         <div>
-          {title && (
-            <h2 className="font-display text-[1.6rem] leading-none tracking-wide text-fg-strong">
-              {title}
-            </h2>
-          )}
-          {description && (
-            <p className="mt-2 max-w-xl font-body text-[12px] font-light leading-relaxed text-fg-muted">
-              {description}
-            </p>
-          )}
+          {title && <h2 className="ad-card-title">{title}</h2>}
+          {description && <p className="ad-card-desc">{description}</p>}
         </div>
-        {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+        {actions && <div className="ad-actions">{actions}</div>}
       </header>
     )}
-    {children}
+    <div className="ad-card-body">{children}</div>
   </section>
 );
 
-type ToneButton = 'primary' | 'outline' | 'danger';
+type Tone = 'primary' | 'outline' | 'danger';
 
 export const ActionButton: React.FC<
-  { tone?: ToneButton; loading?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>
+  { tone?: Tone; loading?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>
 > = ({ tone = 'outline', loading = false, children, className = '', ...rest }) => {
-  const tones: Record<ToneButton, string> = {
-    primary: 'border-gold bg-gold/15 text-gold hover:bg-gold/25',
-    outline: 'border-line bg-surface-2 text-fg-muted hover:border-gold hover:text-gold',
-    danger: 'border-red-500/50 bg-red-500/10 text-red-300 hover:bg-red-500/20',
-  };
-
+  const toneClass = tone === 'primary' ? 'ad-btn--primary' : tone === 'danger' ? 'ad-btn--danger' : '';
   return (
     <button
       type="button"
-      disabled={loading || rest.disabled}
       {...rest}
-      className={`inline-flex items-center gap-2 rounded-[2px] border px-4 py-2 font-body text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${tones[tone]} ${className}`}
+      disabled={loading || rest.disabled}
+      className={`ad-btn ${toneClass} ${className}`.trim()}
     >
       {loading ? 'Working…' : children}
     </button>
@@ -258,39 +226,20 @@ export const ActionButton: React.FC<
 };
 
 export const StatusPill: React.FC<{ published: boolean }> = ({ published }) => (
-  <span
-    className={`inline-flex shrink-0 items-center rounded-[2px] border px-2 py-0.5 font-body text-[8.5px] font-semibold uppercase tracking-[0.16em] ${
-      published
-        ? 'border-line text-fg-subtle'
-        : 'border-gold/50 bg-gold/10 text-gold'
-    }`}
-  >
-    {published ? 'Published' : 'Draft changes'}
+  <span className={`ad-chip ${published ? 'ad-chip--ok' : 'ad-chip--draft'}`}>
+    {published ? 'Published' : 'Unpublished changes'}
   </span>
 );
 
 export const Banner: React.FC<{ tone: 'success' | 'error' | 'info'; children: React.ReactNode }> = ({
   tone,
   children,
-}) => {
-  const tones = {
-    success: 'border-gold/40 bg-gold/10 text-gold',
-    error: 'border-red-500/40 bg-red-500/10 text-red-300',
-    info: 'border-line bg-surface-2 text-fg-muted',
-  } as const;
-
-  return (
-    <p
-      role={tone === 'error' ? 'alert' : 'status'}
-      className={`rounded-[2px] border px-4 py-2.5 font-body text-[12px] ${tones[tone]}`}
-    >
-      {children}
-    </p>
-  );
-};
-
-export const EmptyState: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p className="rounded-[2px] border border-dashed border-line px-4 py-8 text-center font-body text-[12px] font-light text-fg-subtle">
+}) => (
+  <p role={tone === 'error' ? 'alert' : 'status'} className={`ad-banner ad-banner--${tone}`}>
     {children}
   </p>
+);
+
+export const EmptyState: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p className="ad-empty">{children}</p>
 );

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { ApiError, authApi } from '../api';
+import { useAdminTheme } from '../useAdminTheme';
 import { ActionButton, Banner, Field, TextInput } from '../components/ui';
 
 /** Centred card shared by the three pre-dashboard screens. */
@@ -8,34 +9,37 @@ const AuthShell: React.FC<{
   title: string;
   intro: string;
   children: React.ReactNode;
-}> = ({ title, intro, children }) => (
-  <div className="grid min-h-screen place-items-center bg-bg px-5 py-10 text-fg">
-    <div className="w-full max-w-md">
-      <div className="relative overflow-hidden rounded-[2px] border border-line bg-surface p-7 sm:p-9">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
-        <span className="corner-pin left-0 top-0 border-l border-t opacity-60" />
-        <span className="corner-pin right-0 top-0 border-r border-t opacity-60" />
-        <span className="corner-pin bottom-0 left-0 border-b border-l opacity-60" />
-        <span className="corner-pin bottom-0 right-0 border-b border-r opacity-60" />
+}> = ({ title, intro, children }) => {
+  const { theme } = useAdminTheme();
 
-        <h1 className="font-display text-[2rem] leading-none tracking-wide text-fg-strong">
-          {title}
-        </h1>
-        <p className="mb-7 mt-3 font-body text-[12.5px] font-light leading-relaxed text-fg-muted">
-          {intro}
-        </p>
+  return (
+    <div className="ad" data-ad-theme={theme}>
+      <div className="ad-auth">
+        <div style={{ width: '100%', maxWidth: 400 }}>
+          <div className="ad-auth-card">
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}
+            >
+              <span className="ad-brand-mark">SM</span>
+              <span className="ad-brand-name">Portfolio CMS</span>
+            </div>
 
-        {children}
+            <h1 className="ad-auth-title">{title}</h1>
+            <p className="ad-auth-intro">{intro}</p>
+
+            {children}
+          </div>
+
+          <p style={{ textAlign: 'center', marginTop: 16 }}>
+            <a href="/" className="ad-link">
+              ← Back to the portfolio
+            </a>
+          </p>
+        </div>
       </div>
-
-      <p className="mt-5 text-center font-mono text-[9.5px] uppercase tracking-[0.18em] text-fg-subtle">
-        <a href="/" className="transition-colors hover:text-gold">
-          ← Back to the portfolio
-        </a>
-      </p>
     </div>
-  </div>
-);
+  );
+};
 
 export const LoginPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
@@ -66,13 +70,13 @@ export const LoginPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
 
   return (
     <AuthShell
-      title="ADMIN SIGN IN"
+      title="Sign in"
       intro="Owner access only. After your password you will be asked for a code from your authenticator app."
     >
-      <form onSubmit={submit} className="space-y-5">
+      <form onSubmit={submit} className="ad-stack">
         {error && <Banner tone="error">{error}</Banner>}
 
-        <Field label="// EMAIL" htmlFor="admin-email" errors={errors.email}>
+        <Field label="Email" htmlFor="admin-email" errors={errors.email}>
           <TextInput
             id="admin-email"
             type="email"
@@ -84,7 +88,7 @@ export const LoginPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
           />
         </Field>
 
-        <Field label="// PASSWORD" htmlFor="admin-password" errors={errors.password}>
+        <Field label="Password" htmlFor="admin-password" errors={errors.password}>
           <TextInput
             id="admin-password"
             type="password"
@@ -95,7 +99,7 @@ export const LoginPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
           />
         </Field>
 
-        <ActionButton tone="primary" type="submit" loading={busy} className="w-full justify-center">
+        <ActionButton tone="primary" type="submit" loading={busy} className="ad-btn--block">
           Continue
         </ActionButton>
       </form>
@@ -130,14 +134,14 @@ export const TwoFactorPage: React.FC<{ onSuccess: () => void; onSignOut: () => v
 
   return (
     <AuthShell
-      title="TWO-FACTOR CODE"
+      title="Two-factor code"
       intro="Open your authenticator app and enter the current 6-digit code."
     >
-      <form onSubmit={submit} className="space-y-5">
+      <form onSubmit={submit} className="ad-stack">
         {error && <Banner tone="error">{error}</Banner>}
 
         {useRecovery ? (
-          <Field label="// RECOVERY CODE" htmlFor="recovery-code">
+          <Field label="Recovery code" htmlFor="recovery-code">
             <TextInput
               id="recovery-code"
               required
@@ -148,7 +152,7 @@ export const TwoFactorPage: React.FC<{ onSuccess: () => void; onSignOut: () => v
             />
           </Field>
         ) : (
-          <Field label="// 6-DIGIT CODE" htmlFor="totp-code">
+          <Field label="6-digit code" htmlFor="totp-code">
             <TextInput
               id="totp-code"
               required
@@ -156,29 +160,26 @@ export const TwoFactorPage: React.FC<{ onSuccess: () => void; onSignOut: () => v
               inputMode="numeric"
               maxLength={6}
               placeholder="000000"
-              className="text-center font-mono tracking-[0.5em]"
+              className="ad-code-input"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
             />
           </Field>
         )}
 
-        <ActionButton tone="primary" type="submit" loading={busy} className="w-full justify-center">
+        <ActionButton tone="primary" type="submit" loading={busy} className="ad-btn--block">
           Verify
         </ActionButton>
 
-        <div className="flex justify-between gap-3 pt-1">
-          <button
-            type="button"
-            onClick={() => setUseRecovery((value) => !value)}
-            className="font-body text-[11px] text-gold hover:underline underline-offset-4"
-          >
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+          <button type="button" onClick={() => setUseRecovery((v) => !v)} className="ad-link">
             {useRecovery ? 'Use authenticator code' : 'Use a recovery code'}
           </button>
           <button
             type="button"
             onClick={onSignOut}
-            className="font-body text-[11px] text-fg-subtle hover:text-fg"
+            className="ad-link"
+            style={{ color: 'var(--ad-text-muted)' }}
           >
             Sign out
           </button>
@@ -232,71 +233,83 @@ export const EnrollPage: React.FC<{ onSuccess: () => void; onSignOut: () => void
   if (backupCodes) {
     return (
       <AuthShell
-        title="RECOVERY CODES"
+        title="Recovery codes"
         intro="Store these somewhere safe — a password manager is ideal. Each one works once, and they are never shown again."
       >
-        <ul className="mb-6 grid grid-cols-2 gap-2 rounded-[2px] border border-line bg-surface-2 p-4">
+        <ul className="ad-codes">
           {backupCodes.map((backupCode) => (
-            <li key={backupCode} className="font-mono text-[12px] text-fg">
-              {backupCode}
-            </li>
+            <li key={backupCode}>{backupCode}</li>
           ))}
         </ul>
 
-        <ActionButton
-          tone="primary"
-          onClick={() => {
-            void navigator.clipboard?.writeText(backupCodes.join('\n')).catch(() => {});
-          }}
-          className="mb-3 w-full justify-center"
-        >
-          Copy codes
-        </ActionButton>
-
-        <ActionButton onClick={onSuccess} className="w-full justify-center">
-          I have saved them — continue
-        </ActionButton>
+        <div className="ad-stack">
+          <ActionButton
+            onClick={() => {
+              void navigator.clipboard?.writeText(backupCodes.join('\n')).catch(() => {});
+            }}
+            className="ad-btn--block"
+          >
+            Copy codes
+          </ActionButton>
+          <ActionButton tone="primary" onClick={onSuccess} className="ad-btn--block">
+            I have saved them — continue
+          </ActionButton>
+        </div>
       </AuthShell>
     );
   }
 
   return (
     <AuthShell
-      title="SET UP 2FA"
+      title="Set up two-factor"
       intro="Scan this with Google Authenticator, 1Password, Authy or any TOTP app, then enter the code it shows."
     >
-      <form onSubmit={submit} className="space-y-5">
+      <form onSubmit={submit} className="ad-stack">
         {error && <Banner tone="error">{error}</Banner>}
 
         {qr ? (
           <>
-            <div className="flex justify-center">
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
               <img
                 src={qr.qrDataUrl}
                 alt="Two-factor setup QR code"
-                className="rounded-[2px] border border-line bg-white p-2"
-                width={200}
-                height={200}
+                width={190}
+                height={190}
+                style={{ background: '#fff', padding: 8, borderRadius: 10 }}
               />
             </div>
 
-            <div className="rounded-[2px] border border-line bg-surface-2 p-3 text-center">
-              <p className="label-mono mb-1 text-fg-subtle">// OR ENTER THIS KEY</p>
-              <code className="break-all font-mono text-[11px] text-fg">{qr.secret}</code>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: 12,
+                background: 'var(--ad-surface-2)',
+                border: '1px solid var(--ad-border)',
+                borderRadius: 8,
+              }}
+            >
+              <p className="ad-help" style={{ marginTop: 0 }}>
+                Or enter this key manually
+              </p>
+              <code className="ad-mono" style={{ wordBreak: 'break-all' }}>
+                {qr.secret}
+              </code>
             </div>
           </>
         ) : (
-          <p className="text-center font-body text-[12px] text-fg-subtle">Generating…</p>
+          <p className="ad-help" style={{ textAlign: 'center' }}>
+            Generating…
+          </p>
         )}
 
-        <Field label="// CODE FROM THE APP" htmlFor="enroll-code">
+        <Field label="Code from the app" htmlFor="enroll-code">
           <TextInput
             id="enroll-code"
             required
             inputMode="numeric"
             maxLength={6}
             placeholder="000000"
-            className="text-center font-mono tracking-[0.5em]"
+            className="ad-code-input"
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
           />
@@ -307,7 +320,7 @@ export const EnrollPage: React.FC<{ onSuccess: () => void; onSignOut: () => void
           type="submit"
           loading={busy}
           disabled={!qr}
-          className="w-full justify-center"
+          className="ad-btn--block"
         >
           Confirm and enable
         </ActionButton>
@@ -315,7 +328,8 @@ export const EnrollPage: React.FC<{ onSuccess: () => void; onSignOut: () => void
         <button
           type="button"
           onClick={onSignOut}
-          className="w-full font-body text-[11px] text-fg-subtle hover:text-fg"
+          className="ad-link"
+          style={{ color: 'var(--ad-text-muted)' }}
         >
           Sign out
         </button>

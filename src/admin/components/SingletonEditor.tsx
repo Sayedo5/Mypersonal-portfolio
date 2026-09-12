@@ -105,13 +105,13 @@ export const SingletonEditor: React.FC<{
       }
     >
       {banner && (
-        <div className="mb-5">
+        <div style={{ marginBottom: 18 }}>
           <Banner tone={banner.tone}>{banner.text}</Banner>
         </div>
       )}
 
       {errors._form?.length ? (
-        <div className="mb-5">
+        <div style={{ marginBottom: 18 }}>
           <Banner tone="error">{errors._form.join(' ')}</Banner>
         </div>
       ) : null}
@@ -119,7 +119,7 @@ export const SingletonEditor: React.FC<{
       {values ? (
         <FieldGrid fields={fields} values={values} errors={errors} onChange={change} />
       ) : (
-        <p className="font-body text-[12px] text-fg-subtle">Loading…</p>
+        <p className="ad-help">Loading…</p>
       )}
     </Panel>
   );

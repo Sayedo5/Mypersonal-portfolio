@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 
-import { prisma } from '../_lib/prisma.js';
-import { writeAudit } from '../_lib/audit.js';
-import { requireOwnerWithMfa, type OwnerSession } from '../_lib/session.js';
+import { prisma } from './_lib/prisma.js';
+import { writeAudit } from './_lib/audit.js';
+import { requireOwnerWithMfa, type OwnerSession } from './_lib/session.js';
 import {
   ENTITIES,
   delegateFor,
@@ -13,19 +13,19 @@ import {
   toPrismaData,
   type EntityDefinition,
   type EntityName,
-} from '../_lib/registry.js';
+} from './_lib/registry.js';
 import {
   MediaAssetUpdateSchema,
   ProjectSchema,
   ReorderSchema,
-} from '../_lib/schemas.js';
+} from './_lib/schemas.js';
 import {
   allowedContentTypes,
   assertBlobConfigured,
   deleteAsset,
   listMedia,
   registerAsset,
-} from '../_lib/media.js';
+} from './_lib/media.js';
 import {
   createProject,
   deleteProject,
@@ -34,17 +34,16 @@ import {
   publishProject,
   toAdminProject,
   updateProject,
-} from '../_lib/projects.js';
+} from './_lib/projects.js';
 import {
   HttpError,
   clientIp,
   parseOrThrow,
   readBody,
   requireMethod,
-  routeSegments,
   sendOk,
   withApi,
-} from '../_lib/http.js';
+} from './_lib/http.js';
 
 type Ctx = {
   req: VercelRequest;
@@ -511,11 +510,41 @@ async function handlePublishAll(ctx: Ctx) {
 
 // --------------------------------------------------------------- router
 
+/** First query value, ignoring repeats. */
+function param(req: VercelRequest, key: string): string {
+  const value = req.query[key];
+  const raw = Array.isArray(value) ? value[0] : value;
+  return (raw ?? '').trim();
+}
+
+/**
+ * Everything is addressed by query parameter rather than path segment.
+ *
+ * Vercel's dynamic API routes only resolve ONE segment for a non-Next
+ * project, so `/api/admin/hero/publish` 404'd at the platform router before
+ * any of this code ran — which broke every publish, reorder and per-row
+ * action. Query parameters need no dynamic routing at all, so the same URL
+ * works identically in `vercel dev` and in production.
+ *
+ *   GET    /api/admin?resource=hero
+ *   PUT    /api/admin?resource=hero
+ *   POST   /api/admin?resource=hero&action=publish
+ *   POST   /api/admin?resource=stats&id=<id>&action=publish
+ *   POST   /api/admin?resource=stats&action=reorder
+ *   DELETE /api/admin?resource=stats&id=<id>
+ */
 export default withApi(async function handler(req: VercelRequest, res: VercelResponse) {
   // Password + verified TOTP required for every route below, no exceptions.
   const owner = await requireOwnerWithMfa(req);
 
-  const segments = routeSegments(req);
+  const resource = param(req, 'resource');
+  const id = param(req, 'id');
+  const action = param(req, 'action');
+
+  // The handlers below were written against path segments; rebuild that
+  // shape from the query so their logic is unchanged.
+  const segments = [resource, ...(id ? [id] : []), ...(action ? [action] : [])];
+
   const ctx: Ctx = {
     req,
     res,
@@ -524,7 +553,7 @@ export default withApi(async function handler(req: VercelRequest, res: VercelRes
     segments,
   };
 
-  const head = segments[0] ?? '';
+  const head = resource;
 
   switch (head) {
     case 'overview':
@@ -541,6 +570,11 @@ export default withApi(async function handler(req: VercelRequest, res: VercelRes
       return handlePublishAll(ctx);
     default:
       if (isEntityName(head)) return handleEntity(ctx, head);
-      throw new HttpError('NOT_FOUND', `Unknown admin resource "${head}".`);
+      throw new HttpError(
+        'NOT_FOUND',
+        resource
+          ? `Unknown admin resource "${resource}".`
+          : 'No admin resource was requested (missing ?resource= parameter).',
+      );
   }
 });

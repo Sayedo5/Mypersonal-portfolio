@@ -46,14 +46,14 @@ export const OverviewPage: React.FC = () => {
       >
         {error && <Banner tone="error">{error}</Banner>}
 
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[2px] border border-line bg-line lg:grid-cols-4">
+        <div className="ad-stat-grid">
           {tiles.map((tile) => {
             const body = (
               <>
-                <span className="block font-display text-[2.4rem] leading-none text-fg-strong">
+                <span className="ad-stat-value">
                   {tile.value}
                 </span>
-                <span className="mt-2 block font-body text-[9.5px] font-medium uppercase tracking-[0.18em] text-fg-muted">
+                <span className="ad-stat-label">
                   {tile.label}
                 </span>
               </>
@@ -63,12 +63,12 @@ export const OverviewPage: React.FC = () => {
               <Link
                 key={tile.label}
                 to={tile.to}
-                className="bg-surface p-5 transition-colors hover:bg-surface-3"
+                className="ad-stat"
               >
                 {body}
               </Link>
             ) : (
-              <div key={tile.label} className="bg-surface p-5">
+              <div key={tile.label} className="ad-stat">
                 {body}
               </div>
             );
@@ -76,7 +76,7 @@ export const OverviewPage: React.FC = () => {
         </div>
 
         {data && (
-          <p className="mt-4 font-body text-[11.5px] font-light text-fg-subtle">
+          <p className="ad-help" style={{ marginTop: 14 }}>
             Last publish: {formatDate(data.lastPublishedAt)}
           </p>
         )}
@@ -84,17 +84,17 @@ export const OverviewPage: React.FC = () => {
 
       <Panel title="Recent activity" description="Every administrative change is recorded.">
         {!data ? (
-          <p className="font-body text-[12px] text-fg-subtle">Loading…</p>
+          <p className="ad-help">Loading…</p>
         ) : data.recentEvents.length === 0 ? (
           <EmptyState>No activity yet.</EmptyState>
         ) : (
-          <ul className="divide-y divide-line-soft">
+          <ul className="ad-list">
             {data.recentEvents.map((event) => (
-              <li key={event.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
-                <span className="font-body text-[12.5px] text-fg">
-                  <span className="text-gold">{event.action}</span> · {event.entityType}
+              <li key={event.id} className="ad-item" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "9px 12px" }}>
+                <span className="ad-item-title">
+                  <span style={{ color: "var(--ad-primary)" }}>{event.action}</span> · {event.entityType}
                 </span>
-                <span className="font-mono text-[10px] text-fg-subtle">
+                <span className="ad-mono" style={{ color: "var(--ad-text-muted)" }}>
                   {formatDate(event.createdAt)}
                 </span>
               </li>
@@ -209,7 +209,7 @@ export const MediaPage: React.FC = () => {
           <input
             ref={fileInput}
             type="file"
-            className="hidden"
+            style={{ display: 'none' }}
             accept="image/*,video/mp4,video/webm,application/pdf"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -227,7 +227,7 @@ export const MediaPage: React.FC = () => {
       }
     >
       {banner && (
-        <div className="mb-5">
+        <div style={{ marginBottom: 18 }}>
           <Banner tone={banner.tone}>{banner.text}</Banner>
         </div>
       )}
@@ -235,42 +235,42 @@ export const MediaPage: React.FC = () => {
       {assets.length === 0 ? (
         <EmptyState>No files yet. Upload an image, a PDF or an MP4 to get started.</EmptyState>
       ) : (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="ad-media-grid">
           {assets.map((asset) => (
             <li
               key={asset.id}
-              className="flex flex-col gap-3 rounded-[2px] border border-line bg-surface-2/60 p-3"
+              className="ad-media-item"
             >
-              <div className="flex items-start gap-3">
+              <div className="ad-row">
                 {asset.kind === 'IMAGE' ? (
                   <img
                     src={asset.publicUrl}
                     alt=""
-                    className="h-16 w-16 shrink-0 rounded-[2px] border border-line object-cover"
+                    className="ad-thumb"
                   />
                 ) : (
-                  <span className="grid h-16 w-16 shrink-0 place-items-center rounded-[2px] border border-line bg-surface-3 font-mono text-[9px] uppercase text-fg-subtle">
+                  <span className="ad-thumb ad-thumb--doc">
                     {asset.kind}
                   </span>
                 )}
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-body text-[12.5px] text-fg">{asset.originalName}</p>
-                  <p className="font-mono text-[10px] text-fg-subtle">
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p className="ad-item-title">{asset.originalName}</p>
+                  <p className="ad-mono" style={{ color: "var(--ad-text-muted)" }}>
                     {(asset.byteSize / 1024).toFixed(0)} KB
                   </p>
                   <a
                     href={asset.publicUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-body text-[11px] text-gold hover:underline underline-offset-4"
+                    className="ad-link"
                   >
                     Open ↗
                   </a>
                 </div>
               </div>
 
-              <Field label="// ALT TEXT">
+              <Field label="Alt text">
                 <TextInput
                   defaultValue={asset.altText ?? ''}
                   placeholder="Describe the image"
@@ -325,17 +325,13 @@ export const InboxPage: React.FC = () => {
       title="Inbox"
       description="Messages sent through the contact form on the portfolio."
       actions={
-        <div className="flex gap-1">
+        <div style={{ display: "flex", gap: 4 }}>
           {(['ALL', 'UNREAD', 'READ', 'ARCHIVED'] as const).map((value) => (
             <button
               key={value}
               type="button"
               onClick={() => setFilter(value)}
-              className={`rounded-[2px] border px-3 py-1.5 font-body text-[10px] uppercase tracking-[0.14em] transition-colors ${
-                filter === value
-                  ? 'border-gold text-gold'
-                  : 'border-line text-fg-subtle hover:text-fg'
-              }`}
+              className={`ad-btn ${filter === value ? "ad-btn--primary" : ""}`}
             >
               {value}
             </button>
@@ -344,7 +340,7 @@ export const InboxPage: React.FC = () => {
       }
     >
       {banner && (
-        <div className="mb-5">
+        <div style={{ marginBottom: 18 }}>
           <Banner tone="error">{banner}</Banner>
         </div>
       )}
@@ -352,53 +348,51 @@ export const InboxPage: React.FC = () => {
       {messages.length === 0 ? (
         <EmptyState>Nothing here.</EmptyState>
       ) : (
-        <ul className="space-y-2">
+        <ul className="ad-list">
           {messages.map((message) => {
             const open = openId === message.id;
             return (
-              <li key={message.id} className="rounded-[2px] border border-line bg-surface-2/60">
+              <li key={message.id} className="ad-item">
                 <button
                   type="button"
                   onClick={() => {
                     setOpenId(open ? null : message.id);
                     if (!open && message.status === 'UNREAD') void setStatus(message.id, 'READ');
                   }}
-                  className="flex w-full flex-wrap items-center justify-between gap-3 p-3 text-left"
+                  className="ad-item-toggle" style={{ width: "100%", padding: "10px 12px", flexWrap: "wrap", justifyContent: "space-between" }}
                 >
-                  <span className="min-w-0">
-                    <span className="block truncate font-body text-[13px] text-fg">
+                  <span style={{ minWidth: 0 }}>
+                    <span className="ad-item-title" style={{ display: "block" }}>
                       {message.name}{' '}
-                      <span className="text-fg-subtle">· {message.email}</span>
+                      <span style={{ color: "var(--ad-text-muted)" }}>· {message.email}</span>
                     </span>
-                    <span className="block truncate font-body text-[11px] font-light text-fg-subtle">
+                    <span className="ad-item-sub" style={{ display: "block" }}>
                       {message.subject ?? 'Project enquiry'}
                     </span>
                   </span>
 
-                  <span className="flex shrink-0 items-center gap-3">
+                  <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                     {message.status === 'UNREAD' && (
-                      <span className="rounded-[2px] border border-gold/50 bg-gold/10 px-2 py-0.5 font-body text-[8.5px] uppercase tracking-[0.16em] text-gold">
-                        New
-                      </span>
+                      <span className="ad-chip ad-chip--info">New</span>
                     )}
-                    <span className="font-mono text-[10px] text-fg-subtle">
+                    <span className="ad-mono" style={{ color: "var(--ad-text-muted)" }}>
                       {formatDate(message.createdAt)}
                     </span>
                   </span>
                 </button>
 
                 {open && (
-                  <div className="space-y-4 border-t border-line-soft p-4">
+                  <div className="ad-item-body" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     {message.company && (
-                      <p className="font-body text-[12px] text-fg-muted">
+                      <p className="ad-help" style={{ marginTop: 0 }}>
                         Company: {message.company}
                       </p>
                     )}
-                    <p className="whitespace-pre-wrap font-body text-[12.5px] font-light leading-relaxed text-fg-muted">
+                    <p style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.6, color: "var(--ad-text-soft)" }}>
                       {message.message}
                     </p>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="ad-actions">
                       <ActionButton
                         tone="primary"
                         onClick={() => {
@@ -459,12 +453,12 @@ export const AuditPage: React.FC = () => {
       {events.length === 0 ? (
         <EmptyState>No entries yet.</EmptyState>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[540px] border-collapse">
+        <div className="ad-scroll-x">
+          <table className="ad-table" style={{ minWidth: 540 }}>
             <thead>
-              <tr className="border-b border-line text-left">
+              <tr>
                 {['Action', 'Entity', 'By', 'When'].map((heading) => (
-                  <th key={heading} className="label-mono py-2 pr-4 text-fg-subtle">
+                  <th key={heading}>
                     {heading}
                   </th>
                 ))}
@@ -472,15 +466,15 @@ export const AuditPage: React.FC = () => {
             </thead>
             <tbody>
               {events.map((event) => (
-                <tr key={event.id} className="border-b border-line-soft">
-                  <td className="py-2 pr-4 font-mono text-[11px] text-gold">{event.action}</td>
-                  <td className="py-2 pr-4 font-body text-[12px] text-fg-muted">
+                <tr key={event.id}>
+                  <td className="ad-mono" style={{ color: "var(--ad-primary)" }}>{event.action}</td>
+                  <td>
                     {event.entityType}
                   </td>
-                  <td className="py-2 pr-4 font-body text-[12px] text-fg-subtle">
+                  <td>
                     {event.ownerUser?.name ?? 'system'}
                   </td>
-                  <td className="py-2 font-mono text-[10px] text-fg-subtle">
+                  <td className="ad-mono">
                     {formatDate(event.createdAt)}
                   </td>
                 </tr>
@@ -555,8 +549,8 @@ export const SecurityPage: React.FC<{ onSignedOut: () => void }> = ({ onSignedOu
           </div>
         )}
 
-        <form onSubmit={changePassword} className="grid max-w-xl grid-cols-1 gap-5">
-          <Field label="// CURRENT PASSWORD" errors={errors.currentPassword}>
+        <form onSubmit={changePassword} className="ad-stack" style={{ maxWidth: 460 }}>
+          <Field label="Current password" errors={errors.currentPassword}>
             <TextInput
               type="password"
               required
@@ -567,7 +561,7 @@ export const SecurityPage: React.FC<{ onSignedOut: () => void }> = ({ onSignedOu
           </Field>
 
           <Field
-            label="// NEW PASSWORD"
+            label="New password"
             help="At least 12 characters."
             errors={errors.newPassword}
           >
@@ -580,7 +574,7 @@ export const SecurityPage: React.FC<{ onSignedOut: () => void }> = ({ onSignedOu
             />
           </Field>
 
-          <Field label="// CONFIRM NEW PASSWORD" errors={errors.confirmPassword}>
+          <Field label="Confirm new password" errors={errors.confirmPassword}>
             <TextInput
               type="password"
               required
@@ -608,9 +602,9 @@ export const SecurityPage: React.FC<{ onSignedOut: () => void }> = ({ onSignedOu
         }
       >
         {codes ? (
-          <ul className="grid grid-cols-2 gap-2 rounded-[2px] border border-line bg-surface-2 p-4 sm:grid-cols-5">
+          <ul className="ad-codes" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))" }}>
             {codes.map((code) => (
-              <li key={code} className="font-mono text-[12px] text-fg">
+              <li key={code}>
                 {code}
               </li>
             ))}
@@ -632,7 +626,7 @@ export const SecurityPage: React.FC<{ onSignedOut: () => void }> = ({ onSignedOu
           </ActionButton>
         }
       >
-        <p className="font-body text-[12px] font-light text-fg-muted">
+        <p className="ad-help" style={{ marginTop: 0 }}>
           Use this if you signed in on a device you no longer control.
         </p>
       </Panel>
