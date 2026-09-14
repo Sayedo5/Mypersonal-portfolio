@@ -108,8 +108,16 @@ export const CollectionEditor: React.FC<Props> = ({
   };
 
   const publish = async (id: string) => {
+    const current = rows.find((candidate) => candidate.id === id);
+    if (!current) return;
     setBusyId(id);
+    setErrors((existing) => ({ ...existing, [id]: {} }));
     try {
+      // Persist the open form before taking the publish snapshot.
+      const saved = await adminApi.update<AdminRow>(entity, id, pick(fields, current));
+      setRows((existing) => existing.map((row) => row.id === id
+        ? { ...pick(fields, saved as FormValues), id, __published: false }
+        : row));
       await adminApi.publishRow(entity, id);
       setRows((current) =>
         current.map((row) => (row.id === id ? { ...row, __published: true } : row)),

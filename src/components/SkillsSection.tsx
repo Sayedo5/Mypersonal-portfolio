@@ -40,6 +40,7 @@ export const SkillsSection: React.FC = () => {
         titleBottom={section.titleBottom}
         lede={section.lede ?? undefined}
         ledeAside={section.ledeAside}
+        extraFields={section.extraFields}
         className="mb-12"
       />
 

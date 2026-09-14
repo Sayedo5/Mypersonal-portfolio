@@ -25,6 +25,10 @@
   --c-gold-soft: #f7e7c4;
   --c-gold-deep: #c99e5d;
   --c-bronze: #8c6d4f;
+  --c-heading: #ffffff;
+  --c-link: #d4af37;
+  --portfolio-font-scale: 1;
+  --portfolio-font-body: 'Montserrat', system-ui, sans-serif;
 
   --c-line: rgb(140 109 79 / 35%);
   --c-line-soft: rgb(140 109 79 / 20%);
@@ -68,6 +72,8 @@
   --c-gold-soft: #6d5412;
   --c-gold-deep: #a9871f;
   --c-bronze: #a89070;
+  --c-heading: #12100d;
+  --c-link: #8a6a15;
 
   --c-line: rgb(137 114 79 / 32%);
   --c-line-soft: rgb(137 114 79 / 18%);
@@ -144,7 +150,8 @@ body {
 body {
   background-color: var(--c-bg);
   color: var(--c-fg);
-  font-family: var(--font-body);
+  font-family: var(--portfolio-font-body);
+  font-size: calc(16px * var(--portfolio-font-scale));
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition:
@@ -221,6 +228,10 @@ body {
     var(--h-neutral-to)
   );
 }
+
+.text-fg-strong { color: var(--c-heading); }
+.text-gold, .text-gold-deep { color: var(--c-link); }
+.font-body { font-family: var(--portfolio-font-body); }
 
 .headline-gold {
   background-image: linear-gradient(
@@ -323,6 +334,72 @@ body {
 .btn-block {
   width: 100%;
 }
+
+/* Premium in-page detail layers for the portfolio's two highest-intent CTAs. */
+.hire-modal-backdrop,
+.project-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgb(0 0 0 / 78%);
+  backdrop-filter: blur(12px);
+}
+.hire-modal,
+.project-modal {
+  position: relative;
+  width: min(100%, 620px);
+  max-height: min(88vh, 820px);
+  overflow-y: auto;
+  padding: 2rem;
+  border: 1px solid var(--c-line);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c-surface) 94%, var(--c-bg));
+  box-shadow: 0 30px 100px rgb(0 0 0 / 50%), 0 0 0 1px rgb(212 175 55 / 8%);
+}
+.hire-modal::before,
+.project-modal::before { content: ''; position: absolute; inset: 0 12% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--c-gold), transparent); }
+.hire-close,
+.project-modal-close { position: absolute; top: 1rem; right: 1rem; width: 2.1rem; height: 2.1rem; border: 1px solid var(--c-line); border-radius: 50%; background: var(--c-surface-2); color: var(--c-fg-muted); font-size: 1.3rem; cursor: pointer; transition: .2s ease; }
+.hire-close:hover,
+.project-modal-close:hover { color: var(--c-gold); border-color: var(--c-gold); transform: rotate(90deg); }
+.hire-title { display: flex; flex-direction: column; margin: 1rem 0; font-size: clamp(3rem, 8vw, 5.4rem); }
+.hire-title span { display: block; }
+.hire-subtitle { max-width: 38rem; margin-bottom: 1.5rem; color: var(--c-fg-muted); font-size: .9rem; line-height: 1.8; }
+.hire-platforms { display: grid; gap: .75rem; }
+.hire-platform { display: grid; grid-template-columns: 2.8rem 1fr auto; align-items: center; gap: .9rem; min-height: 5rem; padding: 1rem 1.1rem; border: 1px solid; border-radius: 3px; text-decoration: none; transition: box-shadow .25s ease, border-color .25s ease; }
+.hire-platform small { display: block; margin-bottom: .35rem; font: .58rem var(--font-mono); letter-spacing: .2em; color: currentColor; opacity: .72; }
+.hire-platform strong { display: block; font-size: .95rem; letter-spacing: .02em; color: currentColor; }
+.hire-platform b { font-size: 1.2rem; }
+.hire-upwork { color: #14a800; border-color: rgb(20 168 0 / 45%); background: rgb(20 168 0 / 8%); }
+.hire-upwork:hover { box-shadow: 0 14px 34px rgb(20 168 0 / 18%); border-color: #14a800; }
+.hire-fiverr { color: #1dbf73; border-color: rgb(29 191 115 / 45%); background: rgb(29 191 115 / 8%); }
+.hire-fiverr:hover { box-shadow: 0 14px 34px rgb(29 191 115 / 18%); border-color: #1dbf73; }
+.hire-mark { display: grid; place-items: center; width: 2.45rem; height: 2.45rem; border-radius: 50%; font: 700 1.25rem var(--font-body); color: #fff; }
+.hire-mark-upwork { background: #14a800; }
+.hire-mark-fiverr { background: #1dbf73; font-size: .85rem; }
+.hire-fallback, .hire-contact-link { display: block; margin: 1rem auto 0; color: var(--c-fg-subtle); font: .65rem var(--font-mono); letter-spacing: .12em; text-transform: uppercase; text-align: center; background: none; border: 0; cursor: pointer; }
+.hire-fallback:hover, .hire-contact-link:hover { color: var(--c-gold); }
+.project-modal { width: min(100%, 900px); }
+.project-modal-kicker { display: flex; gap: 1rem; flex-wrap: wrap; padding-right: 2.5rem; }
+.project-modal-title { margin: 1.2rem 0 .8rem; font-size: clamp(3rem, 8vw, 6.4rem); }
+.project-modal-description { max-width: 66ch; color: var(--c-fg-muted); line-height: 1.85; }
+.project-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .75rem; margin: 1.5rem 0; }
+.project-gallery figure { margin: 0; border: 1px solid var(--c-line); background: var(--c-bg-alt); }
+.project-gallery img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.project-gallery figcaption { padding: .55rem .7rem; color: var(--c-fg-muted); font-size: .7rem; }
+.project-detail-grid { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.project-detail-block { padding-top: .9rem; border-top: 1px solid var(--c-line-soft); }
+.project-detail-block p, .project-detail-block li { margin-top: .5rem; color: var(--c-fg-muted); font-size: .82rem; line-height: 1.75; }
+.project-detail-block ul { margin: .4rem 0 0; padding-left: 1rem; list-style: none; }
+.project-detail-metrics { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .7rem; }
+.project-detail-metrics span { display: grid; gap: .25rem; padding: .7rem; border: 1px solid var(--c-line); min-width: 7rem; color: var(--c-fg-muted); font: .58rem var(--font-mono); text-transform: uppercase; }
+.project-detail-metrics b { color: var(--c-gold); font-size: .9rem; }
+.project-detail-tech, .project-detail-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.4rem; }
+.project-detail-tech span { padding: .4rem .6rem; border: 1px solid var(--c-line); color: var(--c-fg-muted); font: .62rem var(--font-mono); }
+@media (max-width: 560px) { .hire-modal, .project-modal { padding: 1.35rem; } }
 
 /* ================================================================
    SURFACES

@@ -370,6 +370,16 @@ a.ad-stat:hover {
   cursor: not-allowed;
 }
 
+.ad-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ad-spin .7s linear infinite;
+}
+@keyframes ad-spin { to { transform: rotate(360deg); } }
+
 .ad-btn--primary {
   background: var(--ad-primary);
   border-color: var(--ad-primary);

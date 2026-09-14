@@ -30,6 +30,7 @@ export type FieldDef = {
     | 'list'
     | 'pairs'
     | 'media'
+    | 'media-list'
     | 'json'
     | 'color'
     | 'highlights';
@@ -52,7 +53,8 @@ const MediaPicker: React.FC<{
   value: string | null;
   onChange: (next: string | null) => void;
   kind?: string;
-}> = ({ value, onChange, kind }) => {
+  id: string;
+}> = ({ value, onChange, kind, id }) => {
   const [assets, setAssets] = useState<MediaOption[]>([]);
 
   useEffect(() => {
@@ -75,7 +77,7 @@ const MediaPicker: React.FC<{
 
   return (
     <div className="ad-row">
-      <Select value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
+      <Select id={id} name={id} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
         <option value="">— none (use the bundled default) —</option>
         {options.map((asset) => (
           <option key={asset.id} value={asset.id}>
@@ -92,6 +94,38 @@ const MediaPicker: React.FC<{
         />
       )}
     </div>
+  );
+};
+
+const MediaListPicker: React.FC<{
+  value: string[];
+  onChange: (next: string[]) => void;
+  kind?: string;
+  id: string;
+}> = ({ value, onChange, kind, id }) => {
+  const [assets, setAssets] = useState<MediaOption[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    adminApi.media.list().then((rows) => {
+      if (!cancelled) setAssets(rows as MediaOption[]);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const options = kind ? assets.filter((asset) => asset.kind === kind) : assets;
+  return (
+    <Select
+      id={id}
+      name={id}
+      multiple
+      size={Math.min(Math.max(options.length, 3), 7)}
+      value={value}
+      onChange={(event) => onChange(Array.from(event.target.selectedOptions, (option) => option.value))}
+    >
+      {options.length === 0 && <option value="">Upload images in Media first</option>}
+      {options.map((asset) => <option key={asset.id} value={asset.id}>{asset.originalName}</option>)}
+    </Select>
   );
 };
 
@@ -116,6 +150,7 @@ export const FieldRenderer: React.FC<{
           onChange={set}
           label={field.label}
           help={field.help}
+          id={id}
         />
         {errors?.map((error) => (
           <p key={error} className="ad-error" role="alert">
@@ -157,6 +192,7 @@ export const FieldRenderer: React.FC<{
             onChange={set}
             placeholder={field.placeholder}
             multiline={field.multiline}
+            name={id}
           />
         );
 
@@ -169,6 +205,7 @@ export const FieldRenderer: React.FC<{
                 : []
             }
             onChange={set}
+            name={id}
           />
         );
 
@@ -183,6 +220,8 @@ export const FieldRenderer: React.FC<{
             {items.map((item, index) => (
               <div key={index} className="ad-row">
                 <Select
+                  id={index === 0 ? id : `${id}-${index}-kind`}
+                  name={index === 0 ? id : `${id}-${index}-kind`}
                   style={{ width: 150, flexShrink: 0 }}
                   value={item.kind}
                   onChange={(e) =>
@@ -195,6 +234,8 @@ export const FieldRenderer: React.FC<{
                   <option value="OUTCOME">Outcome</option>
                 </Select>
                 <TextArea
+                  id={`${id}-${index}-text`}
+                  name={`${id}-${index}-text`}
                   rows={2}
                   value={item.text}
                   onChange={(e) =>
@@ -230,6 +271,17 @@ export const FieldRenderer: React.FC<{
             value={typeof value === 'string' && value ? value : null}
             onChange={set}
             kind={field.mediaKind}
+            id={id}
+          />
+        );
+
+      case 'media-list':
+        return (
+          <MediaListPicker
+            value={arr(value)}
+            onChange={set}
+            kind={field.mediaKind}
+            id={id}
           />
         );
 
@@ -251,12 +303,14 @@ export const FieldRenderer: React.FC<{
         return (
           <div className="ad-row" style={{ alignItems: 'center' }}>
             <input
+              id={id}
+              name={id}
               type="color"
               value={str(value) || '#000000'}
               onChange={(e) => set(e.target.value.toUpperCase())}
               style={{ height: 36, width: 46, cursor: 'pointer', borderRadius: 7, border: '1px solid var(--ad-border-strong)', background: 'var(--ad-surface)', padding: 2 }}
             />
-            <TextInput value={str(value)} onChange={(e) => set(e.target.value.toUpperCase())} />
+            <TextInput id={`${id}-value`} name={`${id}-value`} value={str(value)} onChange={(e) => set(e.target.value.toUpperCase())} />
           </div>
         );
 
@@ -337,6 +391,7 @@ export function defaultFor(field: FieldDef): unknown {
     case 'list':
     case 'pairs':
     case 'highlights':
+    case 'media-list':
       return [];
     case 'number':
       return 0;

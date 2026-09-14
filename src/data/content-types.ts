@@ -20,6 +20,10 @@ export type SiteContent = {
   availabilityText: string | null;
   contactCtaLabel: string;
   contactCtaHref: string;
+  hireUpworkUrl: string;
+  hireUpworkFallbackUrl: string | null;
+  hireFiverrUrl: string;
+  hireContactFallback: boolean;
   resumeUrl: string | null;
   footerCreditLine: string | null;
   structuredData: Record<string, unknown> | null;
@@ -30,6 +34,10 @@ export type ThemeContent = {
   allowToggle: boolean;
   accentGold: string;
   accentBronze: string;
+  headingColor: string;
+  linkColor: string;
+  fontFamily: string;
+  fontScale: number;
   logoUrl: string | null;
   faviconUrl: string | null;
   portraitUrl: string | null;
@@ -80,6 +88,7 @@ export type SectionContent = {
   titleBottom: string;
   lede: string | null;
   ledeAside: boolean;
+  extraFields?: Record<string, string>;
 };
 
 export type NavigationContent = {

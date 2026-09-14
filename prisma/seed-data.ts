@@ -44,6 +44,10 @@ export const site = {
   availabilityText: 'Available for new projects',
   contactCtaLabel: 'Hire me',
   contactCtaHref: '#contact',
+  hireUpworkUrl: 'https://www.upwork.com/freelancers/~01514d2dc711d77dd2',
+  hireUpworkFallbackUrl: 'https://www.upwork.com/freelancers/sayedmuhammad110',
+  hireFiverrUrl: 'https://www.fiverr.com/s/Emgjbxy',
+  hireContactFallback: true,
   resumeUrl: profile.resume,
   footerCreditLine: 'BUILT WITH REACT, TYPESCRIPT & TAILWIND',
   structuredData: {
@@ -90,6 +94,10 @@ export const theme = {
   allowToggle: true,
   accentGold: '#D4AF37',
   accentBronze: '#8C6D4F',
+  headingColor: '#FFFFFF',
+  linkColor: '#D4AF37',
+  fontFamily: 'Montserrat',
+  fontScale: 1,
 };
 
 export const profileRow = {
@@ -198,7 +206,7 @@ export const sections = [
     lede: null,
     ledeAside: false,
   },
-].map((section, index) => ({ ...section, visible: true, sortOrder: index }));
+].map((section, index) => ({ ...section, extraFields: {}, visible: true, sortOrder: index }));
 
 /** Previously the hardcoded `channels` array in ContactSection.tsx. */
 export const socialLinks = [

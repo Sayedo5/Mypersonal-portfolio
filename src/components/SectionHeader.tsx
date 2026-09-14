@@ -12,6 +12,7 @@ interface SectionHeaderProps {
   lede?: string;
   /** Place the lede to the right of the headline on desktop. */
   ledeAside?: boolean;
+  extraFields?: Record<string, string>;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   titleBottom,
   lede,
   ledeAside = false,
+  extraFields,
   className = '',
 }) => (
   <div className={className}>
@@ -65,6 +67,15 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
         </p>
       )}
     </motion.div>
+    {extraFields && Object.entries(extraFields).length > 0 && (
+      <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-l border-gold/40 pl-4">
+        {Object.entries(extraFields).map(([key, value]) => (
+          <p key={key} className="font-body text-[11px] text-fg-muted leading-relaxed">
+            <span className="label-mono text-gold mr-2">{key}</span>{value}
+          </p>
+        ))}
+      </div>
+    )}
   </div>
 );
 

@@ -109,11 +109,16 @@ function scalarData(input: ProjectInput): Record<string, unknown> {
  */
 async function replaceRelations(projectId: string, input: ProjectInput): Promise<void> {
   const technologyIds = await resolveTechnologies(input.technologies);
+  const imageIds = [...new Set(input.images)];
+  const assets = imageIds.length
+    ? await prisma.mediaAsset.findMany({ where: { id: { in: imageIds } } })
+    : [];
 
   await prisma.$transaction([
     prisma.projectTechnology.deleteMany({ where: { projectId } }),
     prisma.projectMetric.deleteMany({ where: { projectId } }),
     prisma.projectHighlight.deleteMany({ where: { projectId } }),
+    prisma.projectMedia.deleteMany({ where: { projectId } }),
   ]);
 
   await prisma.$transaction([
@@ -140,6 +145,18 @@ async function replaceRelations(projectId: string, input: ProjectInput): Promise
           stableKey: `${input.stableKey}-highlight-${index}`,
           kind: highlight.kind,
           text: highlight.text,
+          sortOrder: index,
+        },
+      }),
+    ),
+    ...assets.map((asset, index) =>
+      prisma.projectMedia.create({
+        data: {
+          stableKey: `${input.stableKey}-media-${index}`,
+          projectId,
+          mediaAssetId: asset.id,
+          displayRole: index === 0 ? 'HERO' : 'GALLERY',
+          altText: asset.altText ?? `${input.title} screenshot ${index + 1}`,
           sortOrder: index,
         },
       }),
@@ -198,13 +215,22 @@ export async function deleteProject(id: string): Promise<void> {
 
 /** Copies the current scalar columns into `publishedPayload`. */
 export async function publishProject(id: string) {
-  const project = await prisma.project.findUnique({ where: { id } });
+  const project = await prisma.project.findUnique({ where: { id }, include: includeRelations });
   if (!project) throw new HttpError('NOT_FOUND', 'That project no longer exists.');
 
   const snapshot: Record<string, unknown> = {};
   for (const field of PROJECT_SNAPSHOT_FIELDS) {
     snapshot[field] = (project as unknown as Record<string, unknown>)[field];
   }
+  snapshot.technologies = project.technologies.map((link) => link.technology.name);
+  snapshot.metrics = project.metrics.map((metric) => ({ label: metric.label, value: metric.value }));
+  snapshot.highlights = project.highlights.map((highlight) => ({ kind: highlight.kind, text: highlight.text }));
+  snapshot.images = project.media.map((item) => ({
+    url: item.mediaAsset.publicUrl,
+    altText: item.altText,
+    caption: item.caption,
+    displayRole: item.displayRole,
+  }));
 
   const updated = await prisma.project.update({
     where: { id },
@@ -251,6 +277,7 @@ export function toAdminProject(row: Awaited<ReturnType<typeof getProject>>) {
       kind: highlight.kind,
       text: highlight.text,
     })),
+    images: row.media.map((item) => item.mediaAssetId),
     media: row.media.map((item) => ({
       id: item.id,
       mediaAssetId: item.mediaAssetId,

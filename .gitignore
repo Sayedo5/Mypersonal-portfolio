@@ -32,3 +32,6 @@ prisma/generated
 
 .vercel
 .env*
+
+# Local headless-browser profiles used for smoke tests
+.browser-profile*

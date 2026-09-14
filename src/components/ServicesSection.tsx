@@ -40,6 +40,7 @@ export const ServicesSection: React.FC = () => {
         titleBottom={section.titleBottom}
         lede={section.lede ?? undefined}
         ledeAside={section.ledeAside}
+        extraFields={section.extraFields}
         className="mb-12 lg:mb-16"
       />
 

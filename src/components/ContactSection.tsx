@@ -4,6 +4,7 @@ import { useContent } from '../content/ContentProvider';
 import { apiFetch } from '../lib/api';
 import { SectionHeader } from './SectionHeader';
 import { Button } from './Button';
+import { useHireMe } from './HireMeModal';
 
 /**
  * Submissions go to the built-in inbox at /api/contact, readable in the
@@ -20,6 +21,7 @@ const fieldClass =
 
 export const ContactSection: React.FC = () => {
   const { profile, site, socialLinks, sections } = useContent();
+  const { open: openHire } = useHireMe();
   const section = sections.contact;
   const channels = socialLinks.map((link) => ({
     label: link.label,
@@ -96,6 +98,7 @@ export const ContactSection: React.FC = () => {
               titleBottom={section.titleBottom}
               lede={section.lede ?? undefined}
               ledeAside={section.ledeAside}
+              extraFields={section.extraFields}
               className="mb-7"
             />
 
@@ -258,6 +261,11 @@ export const ContactSection: React.FC = () => {
             © {new Date().getFullYear()}
             {site.footerCreditLine ? ` • ${site.footerCreditLine}` : ''}
           </span>
+        </div>
+        <div className="mt-10 flex justify-center">
+          <Button type="button" variant="primary" icon="↗" onClick={openHire} className="!px-8 !py-4">
+            {site.contactCtaLabel}
+          </Button>
         </div>
       </div>
     </footer>

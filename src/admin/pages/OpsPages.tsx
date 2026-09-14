@@ -206,7 +206,10 @@ export const MediaPage: React.FC = () => {
       description="Images, the resume PDF and the hero video. Files referenced anywhere on the site cannot be deleted until the reference is removed."
       actions={
         <>
+          <label htmlFor="media-upload" className="sr-only">Upload media file</label>
           <input
+            id="media-upload"
+            name="mediaFile"
             ref={fileInput}
             type="file"
             style={{ display: 'none' }}
@@ -270,8 +273,10 @@ export const MediaPage: React.FC = () => {
                 </div>
               </div>
 
-              <Field label="Alt text">
+              <Field label="Alt text" htmlFor={`alt-${asset.id}`}>
                 <TextInput
+                  id={`alt-${asset.id}`}
+                  name={`alt-${asset.id}`}
                   defaultValue={asset.altText ?? ''}
                   placeholder="Describe the image"
                   onBlur={(e) => void saveAlt(asset.id, e.target.value)}
@@ -550,9 +555,11 @@ export const SecurityPage: React.FC<{ onSignedOut: () => void }> = ({ onSignedOu
         )}
 
         <form onSubmit={changePassword} className="ad-stack" style={{ maxWidth: 460 }}>
-          <Field label="Current password" errors={errors.currentPassword}>
+          <Field label="Current password" htmlFor="security-current-password" errors={errors.currentPassword}>
             <TextInput
               type="password"
+              id="security-current-password"
+              name="currentPassword"
               required
               autoComplete="current-password"
               value={form.currentPassword}
@@ -562,11 +569,14 @@ export const SecurityPage: React.FC<{ onSignedOut: () => void }> = ({ onSignedOu
 
           <Field
             label="New password"
+            htmlFor="security-new-password"
             help="At least 12 characters."
             errors={errors.newPassword}
           >
             <TextInput
               type="password"
+              id="security-new-password"
+              name="newPassword"
               required
               autoComplete="new-password"
               value={form.newPassword}
@@ -574,9 +584,11 @@ export const SecurityPage: React.FC<{ onSignedOut: () => void }> = ({ onSignedOu
             />
           </Field>
 
-          <Field label="Confirm new password" errors={errors.confirmPassword}>
+          <Field label="Confirm new password" htmlFor="security-confirm-password" errors={errors.confirmPassword}>
             <TextInput
               type="password"
+              id="security-confirm-password"
+              name="confirmPassword"
               required
               autoComplete="new-password"
               value={form.confirmPassword}

@@ -53,13 +53,16 @@ export const Toggle: React.FC<{
   onChange: (next: boolean) => void;
   label: string;
   help?: string;
-}> = ({ checked, onChange, label, help }) => (
+  id?: string;
+}> = ({ checked, onChange, label, help, id }) => (
   <div className="ad-toggle">
     <button
       type="button"
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      id={id}
+      name={id}
       onClick={() => onChange(!checked)}
       className="ad-switch"
     />
@@ -95,7 +98,8 @@ export const StringListInput: React.FC<{
   placeholder?: string;
   addLabel?: string;
   multiline?: boolean;
-}> = ({ value, onChange, placeholder, addLabel = 'Add item', multiline = false }) => {
+  name?: string;
+}> = ({ value, onChange, placeholder, addLabel = 'Add item', multiline = false, name }) => {
   const set = (index: number, next: string) =>
     onChange(value.map((item, i) => (i === index ? next : item)));
 
@@ -114,12 +118,16 @@ export const StringListInput: React.FC<{
           {multiline ? (
             <TextArea
               rows={2}
+              id={`${name ?? 'list'}-${index}`}
+              name={`${name ?? 'list'}-${index}`}
               value={item}
               placeholder={placeholder}
               onChange={(e) => set(index, e.target.value)}
             />
           ) : (
             <TextInput
+              id={`${name ?? 'list'}-${index}`}
+              name={`${name ?? 'list'}-${index}`}
               value={item}
               placeholder={placeholder}
               onChange={(e) => set(index, e.target.value)}
@@ -154,11 +162,14 @@ export const PairListInput: React.FC<{
   onChange: (next: { label: string; value: string }[]) => void;
   labelPlaceholder?: string;
   valuePlaceholder?: string;
-}> = ({ value, onChange, labelPlaceholder = 'Label', valuePlaceholder = 'Value' }) => (
+  name?: string;
+}> = ({ value, onChange, labelPlaceholder = 'Label', valuePlaceholder = 'Value', name }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
     {value.map((pair, index) => (
       <div key={index} className="ad-row">
         <TextInput
+          id={`${name ?? 'pairs'}-${index}-label`}
+          name={`${name ?? 'pairs'}-${index}-label`}
           value={pair.label}
           placeholder={labelPlaceholder}
           onChange={(e) =>
@@ -166,6 +177,8 @@ export const PairListInput: React.FC<{
           }
         />
         <TextInput
+          id={`${name ?? 'pairs'}-${index}-value`}
+          name={`${name ?? 'pairs'}-${index}-value`}
           value={pair.value}
           placeholder={valuePlaceholder}
           onChange={(e) =>
@@ -220,7 +233,7 @@ export const ActionButton: React.FC<
       disabled={loading || rest.disabled}
       className={`ad-btn ${toneClass} ${className}`.trim()}
     >
-      {loading ? 'Working…' : children}
+      {loading ? <><span className="ad-spinner" aria-hidden="true" /> Working…</> : children}
     </button>
   );
 };

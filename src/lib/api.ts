@@ -33,6 +33,7 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
     method,
     // The session lives in an httpOnly cookie; it must ride along.
     credentials: 'same-origin',
+    cache: 'no-store',
     headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
     signal,

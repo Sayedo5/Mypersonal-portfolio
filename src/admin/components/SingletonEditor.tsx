@@ -66,8 +66,15 @@ export const SingletonEditor: React.FC<{
   };
 
   const publish = async () => {
+    if (!values) return;
     setBusy('publish');
+    setErrors({});
     try {
+      // Publish the values currently in the form. Previously this button
+      // snapshotted the last saved row, so an edit followed by Publish was
+      // silently discarded unless Save draft was clicked first.
+      const saved = await adminApi.updateSingleton<AdminRow>(entity, pick(fields, values));
+      setValues(pick(fields, saved as FormValues));
       await adminApi.publishSingleton(entity);
       setPublished(true);
       setBanner({ tone: 'success', text: 'Published. The live site is updated.' });

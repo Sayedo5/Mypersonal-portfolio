@@ -13,6 +13,7 @@ import {
   CareerPage,
   ContactLinksPage,
   HeroPage,
+  HireLinksPage,
   NavigationPage,
   ProfilePage,
   ProjectsPage,
@@ -101,6 +102,7 @@ export const AdminApp: React.FC = () => {
         <Route index element={<OverviewPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="hero" element={<HeroPage />} />
+        <Route path="hire-links" element={<HireLinksPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="services" element={<ServicesPage />} />
         <Route path="projects" element={<ProjectsPage />} />

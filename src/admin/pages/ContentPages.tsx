@@ -230,6 +230,14 @@ const PROJECT_FIELDS: FieldDef[] = [
     full: true,
     help: 'Optional bullets under the description. Leave empty to keep the card as it is today.',
   },
+  {
+    name: 'images',
+    label: '// SCREENSHOTS / IMAGES',
+    type: 'media-list',
+    mediaKind: 'IMAGE',
+    full: true,
+    help: 'Select images from Media. The first image is used as the detail-view hero.',
+  },
   { name: 'seoTitle', label: '// SEO TITLE', type: 'text' },
   { name: 'seoDescription', label: '// SEO DESCRIPTION', type: 'textarea', rows: 2 },
 ];
@@ -423,6 +431,7 @@ const SECTION_FIELDS: FieldDef[] = [
   { name: 'titleBottom', label: '// HEADLINE — LINE 2', type: 'text' },
   { name: 'lede', label: '// SUPPORTING PARAGRAPH', type: 'textarea', rows: 3, full: true },
   { name: 'ledeAside', label: 'Place the paragraph beside the headline', type: 'toggle' },
+  { name: 'extraFields', label: '// EXTRA FIELDS (JSON)', type: 'json', rows: 6, full: true, help: 'Add simple string key/value pairs. They render below this section heading.' },
   VISIBLE_FIELD,
 ];
 
@@ -485,6 +494,20 @@ const THEME_FIELDS: FieldDef[] = [
   { name: 'allowToggle', label: 'Let visitors switch theme', type: 'toggle' },
   { name: 'accentGold', label: '// GOLD ACCENT', type: 'color' },
   { name: 'accentBronze', label: '// BRONZE ACCENT', type: 'color' },
+  { name: 'headingColor', label: '// HEADING COLOR', type: 'color' },
+  { name: 'linkColor', label: '// LINK / ACCENT COLOR', type: 'color' },
+  {
+    name: 'fontFamily',
+    label: '// BODY FONT FAMILY',
+    type: 'select',
+    options: [
+      { value: 'Montserrat', label: 'Montserrat' },
+      { value: 'Inter', label: 'Inter' },
+      { value: 'system-ui', label: 'System UI' },
+      { value: 'Georgia', label: 'Georgia' },
+    ],
+  },
+  { name: 'fontScale', label: '// GLOBAL FONT SCALE', type: 'number', help: '0.85 to 1.25. 1 is the default.' },
   {
     name: 'portraitMediaAssetId',
     label: '// ABOUT PORTRAIT',
@@ -538,6 +561,10 @@ const SITE_FIELDS: FieldDef[] = [
   { name: 'availabilityText', label: '// AVAILABILITY TEXT', type: 'text', full: true },
   { name: 'contactCtaLabel', label: '// HEADER BUTTON LABEL', type: 'text' },
   { name: 'contactCtaHref', label: '// HEADER BUTTON LINK', type: 'url' },
+  { name: 'hireUpworkUrl', label: '// UPWORK URL', type: 'url', full: true },
+  { name: 'hireUpworkFallbackUrl', label: '// UPWORK FALLBACK URL', type: 'url', full: true, help: 'Optional second profile used as a backup link.' },
+  { name: 'hireFiverrUrl', label: '// FIVERR URL', type: 'url', full: true },
+  { name: 'hireContactFallback', label: 'Show contact section as a secondary option', type: 'toggle', full: true },
   {
     name: 'resumeMediaAssetId',
     label: '// RESUME FILE',
@@ -568,5 +595,21 @@ export const SeoPage: React.FC = () => (
     title="SEO & site settings"
     description="Title, description, sharing image, indexing and the structured data search engines read."
     fields={SITE_FIELDS}
+  />
+);
+
+const HIRE_LINK_FIELDS: FieldDef[] = [
+  { name: 'hireUpworkUrl', label: '// PRIMARY UPWORK PROFILE', type: 'url', full: true },
+  { name: 'hireUpworkFallbackUrl', label: '// SECONDARY UPWORK PROFILE', type: 'url', full: true, help: 'Keep the supplied second profile here as a fallback or replace the primary above.' },
+  { name: 'hireFiverrUrl', label: '// FIVERR PROFILE', type: 'url', full: true },
+  { name: 'hireContactFallback', label: 'Offer the contact form as a secondary option', type: 'toggle', full: true },
+];
+
+export const HireLinksPage: React.FC = () => (
+  <SingletonEditor
+    entity="site"
+    title="Hire Me links"
+    description="Manage the platforms opened by both Hire Me buttons. Changes are only live after publishing."
+    fields={HIRE_LINK_FIELDS}
   />
 );

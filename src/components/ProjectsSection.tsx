@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import ScrollStack, { ScrollStackItem } from './ScrollStack';
 import { useContent } from '../content/ContentProvider';
@@ -14,8 +14,8 @@ type Project = ProjectContent;
  * and as a plain stacked list on phones and tablets, where the sticky
  * transform deck fights the browser's own scrolling.
  */
-const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
-  <article className="group relative w-full rounded-lg border border-line bg-surface p-6 sm:p-9 lg:p-12 overflow-hidden transition-colors duration-500 hover:border-gold">
+const ProjectCard: React.FC<{ project: Project; onOpen: (project: Project) => void }> = ({ project, onOpen }) => (
+  <article role="button" tabIndex={0} aria-label={`Open details for ${project.title}`} onClick={(event) => { if ((event.target as HTMLElement).closest('a,button')) return; onOpen(project); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(project); } }} className="group relative w-full rounded-lg border border-line bg-surface p-6 sm:p-9 lg:p-12 overflow-hidden transition-all duration-500 hover:border-gold hover:-translate-y-1 cursor-pointer">
     <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
 
     <span className="corner-pin top-0 left-0 w-4 h-4 border-t-2 border-l-2" />
@@ -127,6 +127,35 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
   </article>
 );
 
+const ProjectDetail: React.FC<{ project: Project; onClose: () => void }> = ({ project, onClose }) => {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = previous; };
+  }, [onClose]);
+
+  return (
+    <motion.div className="project-modal-backdrop" role="presentation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <motion.section role="dialog" aria-modal="true" aria-labelledby="project-detail-title" className="project-modal" initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: 0.98 }} transition={{ duration: 0.32 }}>
+        <button type="button" className="project-modal-close" aria-label="Close project details" onClick={onClose}>×</button>
+        <div className="project-modal-kicker"><span className="label-mono text-gold">{project.number} // CASE STUDY</span><span className="label-mono text-fg-muted">{project.category}</span></div>
+        <h2 id="project-detail-title" className="headline project-modal-title"><span className="headline-neutral">{project.title}</span></h2>
+        <p className="project-modal-description">{project.description}</p>
+        {project.images.length > 0 && <div className="project-gallery">{project.images.map((image) => <figure key={image.url}><img src={image.url} alt={image.altText} />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div>}
+        <div className="project-detail-grid">
+          {([['Summary', project.summary], ['Attribution', project.attribution], ['Problem', project.problem], ['Contribution', project.contribution], ['Architecture', project.architecture]] as const).filter(([, value]) => value).map(([label, value]) => <div key={label} className="project-detail-block"><span className="label-mono text-gold">{label}</span><p>{value}</p></div>)}
+          {project.metrics.length > 0 && <div className="project-detail-block"><span className="label-mono text-gold">Metrics</span><div className="project-detail-metrics">{project.metrics.map((metric) => <span key={metric.label}><b>{metric.value}</b>{metric.label}</span>)}</div></div>}
+          {project.highlights.length > 0 && <div className="project-detail-block"><span className="label-mono text-gold">Highlights</span><ul>{project.highlights.map((item) => <li key={item.text}>✦ {item.text}</li>)}</ul></div>}
+        </div>
+        <div className="project-detail-tech">{project.tech.map((tech) => <span key={tech}>{tech}</span>)}</div>
+        <div className="project-detail-actions">{project.liveUrl && <ButtonLink onClick={(event) => event.stopPropagation()} href={project.liveUrl} external variant="primary" icon="↗">View live site</ButtonLink>}{project.githubUrl && <ButtonLink onClick={(event) => event.stopPropagation()} href={project.githubUrl} external variant="outline" icon="↗">View on GitHub</ButtonLink>}</div>
+      </motion.section>
+    </motion.div>
+  );
+};
+
 export const ProjectsSection: React.FC = () => {
   const { projects, socialLinks, sections } = useContent();
   const section = sections.work;
@@ -135,6 +164,7 @@ export const ProjectsSection: React.FC = () => {
   // The stacking deck needs real scroll runway and a fine pointer; below
   // that it degrades into a janky, hard-to-read experience.
   const useDeck = useMediaQuery('(min-width: 1024px)');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   return (
     <section
@@ -153,6 +183,7 @@ export const ProjectsSection: React.FC = () => {
           titleBottom={section.titleBottom}
           lede={section.lede ?? undefined}
           ledeAside={section.ledeAside}
+          extraFields={section.extraFields}
           className="mb-12 lg:mb-16"
         />
 
@@ -168,7 +199,7 @@ export const ProjectsSection: React.FC = () => {
           >
             {projects.map((project) => (
               <ScrollStackItem key={project.title}>
-                <ProjectCard project={project} />
+                <ProjectCard project={project} onOpen={setSelectedProject} />
               </ScrollStackItem>
             ))}
           </ScrollStack>
@@ -182,7 +213,7 @@ export const ProjectsSection: React.FC = () => {
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <ProjectCard project={project} />
+                <ProjectCard project={project} onOpen={setSelectedProject} />
               </motion.div>
             ))}
           </div>
@@ -202,6 +233,7 @@ export const ProjectsSection: React.FC = () => {
           </p>
         )}
       </div>
+      {selectedProject && <ProjectDetail project={selectedProject} onClose={() => setSelectedProject(null)} />}
     </section>
   );
 };

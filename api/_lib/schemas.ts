@@ -67,6 +67,10 @@ export const SiteSettingsSchema = z.object({
   availabilityText: optionalText(160),
   contactCtaLabel: text(1, 60),
   contactCtaHref: url(300),
+  hireUpworkUrl: url(500),
+  hireUpworkFallbackUrl: optionalUrl(),
+  hireFiverrUrl: url(500),
+  hireContactFallback: z.boolean().default(true),
   resumeMediaAssetId: optionalText(60),
   resumeUrl: optionalUrl(),
   footerCreditLine: optionalText(240),
@@ -78,6 +82,10 @@ export const ThemeSettingsSchema = z.object({
   allowToggle: z.boolean().default(true),
   accentGold: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a hex colour like #D4AF37.'),
   accentBronze: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a hex colour like #8C6E2F.'),
+  headingColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a six-digit hex colour.'),
+  linkColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a six-digit hex colour.'),
+  fontFamily: z.enum(['Montserrat', 'Inter', 'system-ui', 'Georgia']).default('Montserrat'),
+  fontScale: z.number().min(0.85).max(1.25).default(1),
   logoMediaAssetId: optionalText(60),
   faviconMediaAssetId: optionalText(60),
   portraitMediaAssetId: optionalText(60),
@@ -140,6 +148,7 @@ export const ContentSectionSchema = z.object({
   titleBottom: text(1, 60),
   lede: optionalText(600),
   ledeAside: z.boolean().default(false),
+  extraFields: z.record(z.string(), z.string()).default({}),
   visible: flag,
   sortOrder: order,
 });
@@ -260,6 +269,7 @@ export const ProjectSchema = z.object({
   technologies: stringList(30, 60),
   metrics: z.array(ProjectMetricSchema).max(10).default([]),
   highlights: z.array(ProjectHighlightSchema).max(12).default([]),
+  images: z.array(z.string().min(1).max(80)).max(20).default([]),
 });
 
 // -------------------------------------------------------------- media

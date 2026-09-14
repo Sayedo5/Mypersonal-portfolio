@@ -6,6 +6,7 @@ import { useContent } from '../content/ContentProvider';
 import { RichText } from './RichText';
 import { ButtonLink } from './Button';
 import { ThemeToggle } from './ThemeToggle';
+import { useHireMe } from './HireMeModal';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -89,6 +90,7 @@ export const HeroSection: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const typed = useTypewriter(hero.terminalLines);
+  const { open: openHire } = useHireMe();
 
   const navItems = navigation.map((item) => ({ name: item.label, href: item.href }));
   const resumeHref = site.resumeUrl ?? '/resume.pdf';
@@ -186,9 +188,7 @@ export const HeroSection: React.FC = () => {
             onMouseLeave={() => setIsHovered(false)}
             className="flex items-center gap-2.5 shrink-0 font-body text-[11px] sm:text-xs font-semibold tracking-[0.28em] uppercase text-fg hover:text-gold transition-colors"
           >
-            <span className="grid place-items-center w-8 h-8 border border-gold/60 text-[10px] tracking-normal text-gold">
-              {profile.initials}
-            </span>
+            {theme.logoUrl ? <img src={theme.logoUrl} alt="" className="w-8 h-8 object-contain" /> : <span className="grid place-items-center w-8 h-8 border border-gold/60 text-[10px] tracking-normal text-gold">{profile.initials}</span>}
             <span className="hidden sm:inline">{profile.name.toUpperCase()}</span>
           </a>
 
@@ -215,7 +215,8 @@ export const HeroSection: React.FC = () => {
             <ThemeToggle />
 
             <ButtonLink
-              href={site.contactCtaHref}
+              href="#hire-me"
+              onClick={(event) => { event.preventDefault(); openHire(); }}
               variant="primary"
               icon="↗"
               onMouseEnter={() => setIsHovered(true)}
@@ -264,7 +265,7 @@ export const HeroSection: React.FC = () => {
                 </li>
               ))}
               <li className="p-3">
-                <ButtonLink href={site.contactCtaHref} variant="primary" block icon="↗" onClick={() => setMenuOpen(false)}>
+                <ButtonLink href="#hire-me" variant="primary" block icon="↗" onClick={(event) => { event.preventDefault(); setMenuOpen(false); openHire(); }}>
                   {site.contactCtaLabel}
                 </ButtonLink>
               </li>

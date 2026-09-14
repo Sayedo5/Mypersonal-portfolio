@@ -119,6 +119,14 @@ export async function readPortfolioContent(preview = false): Promise<PortfolioCo
       titleBottom: str(row.titleBottom),
       lede: nullableStr(row.lede),
       ledeAside: bool(row.ledeAside),
+      extraFields:
+        row.extraFields && typeof row.extraFields === 'object'
+          ? (Object.fromEntries(
+              Object.entries(row.extraFields as Record<string, unknown>).filter(
+                ([, value]) => typeof value === 'string',
+              ),
+            ) as Record<string, string>)
+          : {},
     };
   }
 
@@ -206,6 +214,40 @@ export async function readPortfolioContent(preview = false): Promise<PortfolioCo
         }[];
       };
 
+      const publishedRelations = snapshot as unknown as {
+        technologies?: string[];
+        metrics?: { label: string; value: string }[];
+        highlights?: { kind: string; text: string }[];
+        images?: { url: string; altText: string; caption: string | null; displayRole: string }[];
+      };
+      const liveTech = relations.technologies.filter((link) => link.technology.visible !== false).map((link) => link.technology.name);
+      const liveMetrics = relations.metrics.filter((metric) => metric.visible !== false).map((metric) => ({ label: metric.label, value: metric.value }));
+      const liveHighlights = relations.highlights.filter((highlight) => highlight.visible !== false).map((highlight) => ({
+        kind: highlight.kind === 'OUTCOME' ? ('OUTCOME' as const) : ('CAPABILITY' as const),
+        text: highlight.text,
+      }));
+      const liveImages = relations.media.filter((item) => item.visible !== false).map((item) => ({
+        url: item.mediaAsset.publicUrl,
+        altText: item.altText,
+        caption: item.caption,
+        displayRole: item.displayRole,
+      }));
+      const tech = preview
+        ? liveTech
+        : publishedRelations.technologies ?? liveTech;
+      const metrics = preview
+        ? liveMetrics
+        : publishedRelations.metrics ?? liveMetrics;
+      const highlights = preview
+        ? liveHighlights
+        : (publishedRelations.highlights ?? []).map((highlight) => ({
+            kind: highlight.kind === 'OUTCOME' ? ('OUTCOME' as const) : ('CAPABILITY' as const),
+            text: highlight.text,
+          }));
+      const images = preview
+        ? liveImages
+        : publishedRelations.images ?? liveImages;
+
       return {
         slug: str(snapshot.slug),
         number: str(snapshot.number),
@@ -217,26 +259,10 @@ export async function readPortfolioContent(preview = false): Promise<PortfolioCo
         problem: nullableStr(snapshot.problem),
         contribution: nullableStr(snapshot.contribution),
         architecture: nullableStr(snapshot.architecture),
-        tech: relations.technologies
-          .filter((link) => link.technology.visible !== false)
-          .map((link) => link.technology.name),
-        metrics: relations.metrics
-          .filter((metric) => metric.visible !== false)
-          .map((metric) => ({ label: metric.label, value: metric.value })),
-        highlights: relations.highlights
-          .filter((highlight) => highlight.visible !== false)
-          .map((highlight) => ({
-            kind: highlight.kind === 'OUTCOME' ? ('OUTCOME' as const) : ('CAPABILITY' as const),
-            text: highlight.text,
-          })),
-        images: relations.media
-          .filter((item) => item.visible !== false)
-          .map((item) => ({
-            url: item.mediaAsset.publicUrl,
-            altText: item.altText,
-            caption: item.caption,
-            displayRole: item.displayRole,
-          })),
+        tech,
+        metrics,
+        highlights,
+        images,
         liveUrl: nullableStr(snapshot.liveUrl),
         githubUrl: nullableStr(snapshot.repositoryUrl),
         featured: bool(snapshot.featured),
@@ -257,6 +283,10 @@ export async function readPortfolioContent(preview = false): Promise<PortfolioCo
       availabilityText: nullableStr(site.availabilityText),
       contactCtaLabel: str(site.contactCtaLabel, 'Hire me'),
       contactCtaHref: str(site.contactCtaHref, '#contact'),
+      hireUpworkUrl: str(site.hireUpworkUrl, 'https://www.upwork.com/freelancers/~01514d2dc711d77dd2'),
+      hireUpworkFallbackUrl: nullableStr(site.hireUpworkFallbackUrl),
+      hireFiverrUrl: str(site.hireFiverrUrl, 'https://www.fiverr.com/s/Emgjbxy'),
+      hireContactFallback: bool(site.hireContactFallback, true),
       resumeUrl: mediaUrl(assets, site.resumeMediaAssetId, nullableStr(site.resumeUrl)),
       footerCreditLine: nullableStr(site.footerCreditLine),
       structuredData:
@@ -272,6 +302,10 @@ export async function readPortfolioContent(preview = false): Promise<PortfolioCo
       allowToggle: bool(theme.allowToggle, true),
       accentGold: str(theme.accentGold, '#D4AF37'),
       accentBronze: str(theme.accentBronze, '#8C6E2F'),
+      headingColor: str(theme.headingColor, '#FFFFFF'),
+      linkColor: str(theme.linkColor, '#D4AF37'),
+      fontFamily: str(theme.fontFamily, 'Montserrat'),
+      fontScale: typeof theme.fontScale === 'number' ? theme.fontScale : 1,
       logoUrl: mediaUrl(assets, theme.logoMediaAssetId),
       faviconUrl: mediaUrl(assets, theme.faviconMediaAssetId),
       portraitUrl: mediaUrl(assets, theme.portraitMediaAssetId),

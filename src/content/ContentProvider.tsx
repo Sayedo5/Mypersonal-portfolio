@@ -84,11 +84,15 @@ export const ContentProvider: React.FC<Props> = ({ children, preview = false }) 
     window.addEventListener(REFRESH_EVENT, onRefresh);
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onFocus);
+    const poll = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void load();
+    }, 5000);
 
     return () => {
       window.removeEventListener(REFRESH_EVENT, onRefresh);
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onFocus);
+      window.clearInterval(poll);
     };
   }, [load]);
 

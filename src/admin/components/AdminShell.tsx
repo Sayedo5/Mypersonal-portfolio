@@ -18,6 +18,7 @@ export const ADMIN_NAV: readonly { label: string; items: readonly NavItem[] }[] 
     items: [
       { to: '/admin/profile', label: 'Profile', glyph: '◍' },
       { to: '/admin/hero', label: 'Hero', glyph: '▲' },
+      { to: '/admin/hire-links', label: 'Hire Me links', glyph: '↗' },
       { to: '/admin/about', label: 'About & stats', glyph: '▦' },
       { to: '/admin/services', label: 'Services', glyph: '▤' },
       { to: '/admin/projects', label: 'Projects', glyph: '▣' },

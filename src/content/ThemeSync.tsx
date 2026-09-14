@@ -31,6 +31,16 @@ export const ThemeSync: React.FC = () => {
 
     applyAccent('--c-gold', theme.accentGold, '#d4af37');
     applyAccent('--c-bronze', theme.accentBronze, '#8c6d4f');
+    root.style.setProperty('--c-heading', theme.headingColor);
+    root.style.setProperty('--c-link', theme.linkColor);
+    root.style.setProperty('--portfolio-font-scale', String(theme.fontScale));
+    const families: Record<string, string> = {
+      Montserrat: "'Montserrat', system-ui, sans-serif",
+      Inter: "'Inter', system-ui, sans-serif",
+      'system-ui': 'system-ui, sans-serif',
+      Georgia: 'Georgia, serif',
+    };
+    root.style.setProperty('--portfolio-font-body', families[theme.fontFamily] ?? families.Montserrat);
 
     let stored: string | null = null;
     try {

@@ -135,6 +135,10 @@ model SiteSettings {
 
   contactCtaLabel String @default("Hire me")
   contactCtaHref  String @default("#contact")
+  hireUpworkUrl String @default("https://www.upwork.com/freelancers/~01514d2dc711d77dd2")
+  hireUpworkFallbackUrl String?
+  hireFiverrUrl String @default("https://www.fiverr.com/s/Emgjbxy")
+  hireContactFallback Boolean @default(true)
 
   resumeMediaAssetId String?
   resumeMediaAsset   MediaAsset? @relation("SiteResumeMedia", fields: [resumeMediaAssetId], references: [id], onDelete: Restrict)
@@ -162,6 +166,10 @@ model ThemeSettings {
   allowToggle  Boolean   @default(true)
   accentGold   String    @default("#D4AF37")
   accentBronze String    @default("#8C6E2F")
+  headingColor String    @default("#FFFFFF")
+  linkColor    String    @default("#D4AF37")
+  fontFamily   String    @default("Montserrat")
+  fontScale    Float     @default(1)
 
   logoMediaAssetId      String?
   faviconMediaAssetId   String?
@@ -277,6 +285,7 @@ model ContentSection {
   titleBottom String
   lede        String?
   ledeAside   Boolean @default(false)
+  extraFields Json?
 
   visible          Boolean          @default(true)
   sortOrder        Int

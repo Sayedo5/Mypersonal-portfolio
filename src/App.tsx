@@ -8,6 +8,7 @@ import { ProjectsSection } from './components/ProjectsSection';
 import { SkillsSection } from './components/SkillsSection';
 import { ExperienceSection } from './components/ExperienceSection';
 import { ContactSection } from './components/ContactSection';
+import { HireMeProvider } from './components/HireMeModal';
 
 type Props = {
   /** Owner-only preview of unpublished drafts, served at /preview. */
@@ -17,6 +18,7 @@ type Props = {
 function App({ preview = false }: Props) {
   return (
     <ContentProvider preview={preview}>
+      <HireMeProvider>
       <DocumentHead />
       <ThemeSync />
 
@@ -46,6 +48,7 @@ function App({ preview = false }: Props) {
 
         <ContactSection />
       </div>
+      </HireMeProvider>
     </ContentProvider>
   );
 }
