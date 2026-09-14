@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useContent } from '../content/ContentProvider';
+import { useBodyScrollLock } from './useBodyScrollLock';
 
 type HireContextValue = { open: () => void };
 const HireContext = createContext<HireContextValue>({ open: () => {} });
@@ -14,13 +15,13 @@ export const HireMeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [open, setOpen] = useState(false);
   const { site } = useContent();
 
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
     document.addEventListener('keydown', onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = previous; };
+    return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
   const goToContact = () => {

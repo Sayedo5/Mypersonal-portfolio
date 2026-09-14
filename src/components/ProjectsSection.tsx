@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import ScrollStack, { ScrollStackItem } from './ScrollStack';
 import { useContent } from '../content/ContentProvider';
 import type { ProjectContent } from '../data/content-types';
 import { SectionHeader } from './SectionHeader';
 import { ButtonLink } from './Button';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import { useBodyScrollLock } from './useBodyScrollLock';
 
 type Project = ProjectContent;
 
@@ -128,13 +129,30 @@ const ProjectCard: React.FC<{ project: Project; onOpen: (project: Project) => vo
 );
 
 const ProjectDetail: React.FC<{ project: Project; onClose: () => void }> = ({ project, onClose }) => {
+  const images = project.images.filter((image) => image.url.trim());
+  const [activeImage, setActiveImage] = useState(0);
+  const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
+
+  useBodyScrollLock(true);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = previous; };
+    return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    setActiveImage(0);
+    setFailedImages(new Set());
+  }, [project.slug]);
+
+  const moveImage = (direction: 1 | -1) => {
+    if (images.length < 2) return;
+    setActiveImage((current) => (current + direction + images.length) % images.length);
+  };
+
+  const currentImage = images[activeImage];
+  const currentImageFailed = currentImage ? failedImages.has(currentImage.url) : true;
 
   return (
     <motion.div className="project-modal-backdrop" role="presentation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
@@ -142,8 +160,53 @@ const ProjectDetail: React.FC<{ project: Project; onClose: () => void }> = ({ pr
         <button type="button" className="project-modal-close" aria-label="Close project details" onClick={onClose}>×</button>
         <div className="project-modal-kicker"><span className="label-mono text-gold">{project.number} // CASE STUDY</span><span className="label-mono text-fg-muted">{project.category}</span></div>
         <h2 id="project-detail-title" className="headline project-modal-title"><span className="headline-neutral">{project.title}</span></h2>
-        <p className="project-modal-description">{project.description}</p>
-        {project.images.length > 0 && <div className="project-gallery">{project.images.map((image) => <figure key={image.url}><img src={image.url} alt={image.altText} />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div>}
+        <div className="project-modal-intro">
+          <p className="project-modal-description">{project.description}</p>
+        </div>
+        <div className="project-gallery" aria-label={`${project.title} project images`}>
+          {currentImage && !currentImageFailed ? (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.figure
+                key={currentImage.url}
+                className="project-gallery-slide"
+                initial={{ opacity: 0, x: 18 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -18 }}
+                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <img
+                  src={currentImage.url}
+                  alt={currentImage.altText || `${project.title} screenshot ${activeImage + 1}`}
+                  onError={() => setFailedImages((current) => new Set(current).add(currentImage.url))}
+                />
+                {currentImage.caption && <figcaption>{currentImage.caption}</figcaption>}
+              </motion.figure>
+            </AnimatePresence>
+          ) : (
+            <div className="project-gallery-empty" role="status">
+              <span className="project-gallery-empty-icon" aria-hidden="true">▧</span>
+              <span>{images.length ? 'Image unavailable' : 'No images added yet'}</span>
+            </div>
+          )}
+          {images.length > 1 && (
+            <>
+              <button type="button" className="project-gallery-arrow project-gallery-arrow-prev" onClick={() => moveImage(-1)} aria-label="Previous project image">←</button>
+              <button type="button" className="project-gallery-arrow project-gallery-arrow-next" onClick={() => moveImage(1)} aria-label="Next project image">→</button>
+              <div className="project-gallery-dots" aria-label={`Image ${activeImage + 1} of ${images.length}`}>
+                {images.map((image, index) => (
+                  <button
+                    type="button"
+                    key={image.url}
+                    className={`project-gallery-dot ${index === activeImage ? 'is-active' : ''}`}
+                    onClick={() => setActiveImage(index)}
+                    aria-label={`Show image ${index + 1} of ${images.length}`}
+                    aria-current={index === activeImage ? 'true' : undefined}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <div className="project-detail-grid">
           {([['Summary', project.summary], ['Attribution', project.attribution], ['Problem', project.problem], ['Contribution', project.contribution], ['Architecture', project.architecture]] as const).filter(([, value]) => value).map(([label, value]) => <div key={label} className="project-detail-block"><span className="label-mono text-gold">{label}</span><p>{value}</p></div>)}
           {project.metrics.length > 0 && <div className="project-detail-block"><span className="label-mono text-gold">Metrics</span><div className="project-detail-metrics">{project.metrics.map((metric) => <span key={metric.label}><b>{metric.value}</b>{metric.label}</span>)}</div></div>}

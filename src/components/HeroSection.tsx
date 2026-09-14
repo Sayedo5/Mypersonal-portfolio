@@ -8,6 +8,58 @@ import { ButtonLink } from './Button';
 import { ThemeToggle } from './ThemeToggle';
 import { useHireMe } from './HireMeModal';
 
+const orbitGlyph = (name: string) => {
+  const normalized = name.toLowerCase();
+  if (normalized.includes('typescript')) return 'TS';
+  if (normalized.includes('react')) return '⚛';
+  if (normalized.includes('node')) return 'N';
+  if (normalized.includes('next')) return 'N>';
+  return name.trim().slice(0, 2).toUpperCase();
+};
+
+const FloatingTechOrbit: React.FC<{ skills: string[] }> = ({ skills }) => {
+  const [active, setActive] = useState(false);
+  const orbitItems = skills.filter(Boolean).filter((skill, index, all) => all.indexOf(skill) === index).slice(0, 6);
+
+  if (!orbitItems.length) return null;
+
+  return (
+    <div
+      className={`tech-orbit ${active ? 'is-active' : ''}`}
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      onPointerDown={(event) => { if (event.pointerType === 'touch') setActive(true); }}
+      onPointerUp={(event) => { if (event.pointerType === 'touch') setActive(false); }}
+      onPointerCancel={() => setActive(false)}
+    >
+      <div className="tech-orbit-stage" aria-hidden={!active}>
+        <div className="tech-orbit-ring" />
+        <div className="tech-orbit-track">
+          {orbitItems.map((skill, index) => {
+            const angle = `${(360 / orbitItems.length) * index}deg`;
+            return (
+              <div className="tech-orbit-item" key={skill} style={{ '--orbit-angle': angle } as React.CSSProperties}>
+                <button
+                  type="button"
+                  className="tech-orbit-badge"
+                  aria-label={skill}
+                  tabIndex={active ? 0 : -1}
+                >
+                  {orbitGlyph(skill)}
+                  <span className="tech-orbit-tooltip">{skill}</span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <button type="button" className="tech-orbit-core" aria-label="Show technologies" onClick={() => { if (window.matchMedia('(pointer: fine)').matches) setActive((value) => !value); }}>
+        &lt;/&gt;
+      </button>
+    </div>
+  );
+};
+
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -85,7 +137,7 @@ function useTypewriter(lines: readonly string[]) {
 }
 
 export const HeroSection: React.FC = () => {
-  const { profile, hero, site, theme, navigation } = useContent();
+  const { profile, hero, site, theme, navigation, skillBlocks } = useContent();
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [isHovered, setIsHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -128,14 +180,14 @@ export const HeroSection: React.FC = () => {
       )}
 
       {/* ================= 2. FIXED VIDEO LAYER ================= */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-bg flex items-center justify-center sm:justify-end">
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-bg">
         <video
           autoPlay
           muted
           loop
           playsInline
           aria-hidden="true"
-          className="h-full w-auto min-w-full sm:min-w-0 max-w-none object-cover sm:object-contain origin-center sm:origin-right"
+          className="absolute inset-0 h-full w-full max-w-none object-cover object-center"
           style={{ opacity: 'var(--video-opacity)', mixBlendMode: 'var(--video-blend)' as never }}
         >
           <source src={theme.heroVideoUrl ?? '/videos/hero.mp4'} type="video/mp4" />
@@ -176,6 +228,8 @@ export const HeroSection: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <FloatingTechOrbit skills={skillBlocks.flatMap((block) => block.items)} />
 
       {/* ================= 4. CONTENT LAYER ================= */}
       <div className="relative z-10 flex flex-col min-h-[100svh] w-full px-5 sm:px-8 lg:px-16 pt-5 pb-10">
