@@ -1,6 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import {
+  siExpo,
+  siExpress,
+  siFirebase,
+  siGit,
+  siJsonwebtokens,
+  siMongodb,
+  siNeon,
+  siNextdotjs,
+  siNodedotjs,
+  siPostgresql,
+  siPrisma,
+  siRadixui,
+  siReact,
+  siRedux,
+  siShadcnui,
+  siSupabase,
+  siTailwindcss,
+  siTanstack,
+  siTypescript,
+  siVercel,
+} from 'simple-icons';
+import type { SimpleIcon } from 'simple-icons';
 import watermarkImg from '../assets/watermark.png';
 import { useContent } from '../content/ContentProvider';
 import { RichText } from './RichText';
@@ -17,9 +40,90 @@ const orbitGlyph = (name: string) => {
   return name.trim().slice(0, 2).toUpperCase();
 };
 
-const FloatingTechOrbit: React.FC<{ skills: string[] }> = ({ skills }) => {
+const orbitTechOrder = [
+  'Next.js',
+  'React.js',
+  'React Native',
+  'TypeScript',
+  'Tailwind CSS',
+  'Shadcn UI',
+  'Radix UI',
+  'Expo',
+  'Node.js',
+  'Express.js',
+  'JWT',
+  'Prisma ORM',
+  'PostgreSQL',
+  'Neon DB',
+  'MongoDB',
+  'Firebase',
+  'Supabase',
+  'TanStack Query',
+  'Redux Toolkit',
+  'Git',
+  'Vercel',
+];
+
+const getOrbitIcon = (name: string): SimpleIcon | null => {
+  const normalized = name.toLowerCase();
+  if (normalized.includes('next')) return siNextdotjs;
+  if (normalized.includes('react')) return siReact;
+  if (normalized.includes('typescript')) return siTypescript;
+  if (normalized.includes('tailwind')) return siTailwindcss;
+  if (normalized.includes('shadcn')) return siShadcnui;
+  if (normalized.includes('radix')) return siRadixui;
+  if (normalized.includes('expo')) return siExpo;
+  if (normalized.includes('node')) return siNodedotjs;
+  if (normalized.includes('express')) return siExpress;
+  if (normalized.includes('jwt')) return siJsonwebtokens;
+  if (normalized.includes('prisma')) return siPrisma;
+  if (normalized.includes('postgres')) return siPostgresql;
+  if (normalized.includes('neon')) return siNeon;
+  if (normalized.includes('mongo')) return siMongodb;
+  if (normalized.includes('firebase')) return siFirebase;
+  if (normalized.includes('supabase')) return siSupabase;
+  if (normalized.includes('tanstack')) return siTanstack;
+  if (normalized.includes('redux')) return siRedux;
+  if (normalized === 'git') return siGit;
+  if (normalized === 'vercel') return siVercel;
+  return null;
+};
+
+const TechMark: React.FC<{ name: string }> = ({ name }) => {
+  const normalized = name.toLowerCase();
+  const icon = getOrbitIcon(name);
+
+  if (icon) {
+    const isNext = normalized.includes('next');
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={`tech-orbit-icon ${isNext ? 'tech-orbit-icon-next' : ''}`} fill="currentColor" style={{ color: isNext ? 'var(--c-fg-strong)' : `#${icon.hex}` }}>
+        <path d={icon.path} />
+      </svg>
+    );
+  }
+
+  if (normalized.includes('tailwind')) {
+    return <svg viewBox="0 0 24 24" aria-hidden="true" className="tech-orbit-icon tech-orbit-icon-tailwind"><path d="M5 14.5c1.3-4.4 3.6-6.6 6.9-6.6 4.9 0 4 4.9 7.1 4.9 1.2 0 2.2-.4 3-1.2-1.3 4.4-3.6 6.6-6.9 6.6-4.9 0-4-4.9-7.1-4.9-1.2 0-2.2.4-3 1.2Z" /></svg>;
+  }
+
+  return <span className="tech-orbit-fallback-mark">{orbitGlyph(name)}</span>;
+};
+
+const FloatingTechOrbit: React.FC<{ skills: string[]; watermarkUrl: string | null }> = ({ skills, watermarkUrl }) => {
   const [active, setActive] = useState(false);
-  const orbitItems = skills.filter(Boolean).filter((skill, index, all) => all.indexOf(skill) === index).slice(0, 6);
+  const uniqueSkills = skills.filter(Boolean).filter((skill, index, all) => all.indexOf(skill) === index);
+  const selectedSkills = orbitTechOrder
+    .map((preferred) => uniqueSkills.find((skill) => {
+      const value = skill.toLowerCase();
+      if (preferred === 'React.js') return value.includes('react.js');
+      if (preferred === 'React Native') return value.includes('react native');
+      if (preferred === 'Next.js') return value.includes('next.js');
+      return value.includes(preferred.toLowerCase().replace(' orm', '').replace(' toolkit', ''));
+    }))
+    .filter((skill, index, all): skill is string => Boolean(skill) && all.indexOf(skill) === index);
+  const orbitItems = selectedSkills.map((skill, index) => ({ skill, ring: index % 2 }));
+  const ringCounts = [0, 1].map((ring) => orbitItems.filter((item) => item.ring === ring).length);
+  const ringPositions = [0, 1].map(() => 0);
 
   if (!orbitItems.length) return null;
 
@@ -28,33 +132,33 @@ const FloatingTechOrbit: React.FC<{ skills: string[] }> = ({ skills }) => {
       className={`tech-orbit ${active ? 'is-active' : ''}`}
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
-      onPointerDown={(event) => { if (event.pointerType === 'touch') setActive(true); }}
-      onPointerUp={(event) => { if (event.pointerType === 'touch') setActive(false); }}
-      onPointerCancel={() => setActive(false)}
     >
       <div className="tech-orbit-stage" aria-hidden={!active}>
-        <div className="tech-orbit-ring" />
+        <div className="tech-orbit-ring tech-orbit-ring-inner" />
+        <div className="tech-orbit-ring tech-orbit-ring-outer" />
         <div className="tech-orbit-track">
-          {orbitItems.map((skill, index) => {
-            const angle = `${(360 / orbitItems.length) * index}deg`;
+          {orbitItems.map(({ skill, ring }) => {
+            const position = ringPositions[ring]++;
+            const delay = `${-((14 / ringCounts[ring]) * position).toFixed(3)}s`;
             return (
-              <div className="tech-orbit-item" key={skill} style={{ '--orbit-angle': angle } as React.CSSProperties}>
+              <div className={`tech-orbit-item tech-orbit-item-${ring === 0 ? 'inner' : 'outer'}`} key={skill} style={{ '--orbit-delay': delay } as React.CSSProperties}>
                 <button
                   type="button"
                   className="tech-orbit-badge"
                   aria-label={skill}
                   tabIndex={active ? 0 : -1}
                 >
-                  {orbitGlyph(skill)}
-                  <span className="tech-orbit-tooltip">{skill}</span>
+                  <TechMark name={skill} />
+                  <span className="tech-orbit-label">{skill}</span>
                 </button>
               </div>
             );
           })}
         </div>
       </div>
-      <button type="button" className="tech-orbit-core" aria-label="Show technologies" onClick={() => { if (window.matchMedia('(pointer: fine)').matches) setActive((value) => !value); }}>
-        &lt;/&gt;
+      <button type="button" className="tech-orbit-core" aria-label="Show technologies used by Sayed Muhammad" onClick={() => setActive((value) => !value)}>
+        <span className="tech-orbit-core-glow" aria-hidden="true" />
+        <img src={watermarkUrl ?? watermarkImg} alt="" aria-hidden="true" />
       </button>
     </div>
   );
@@ -209,27 +313,9 @@ export const HeroSection: React.FC = () => {
           }}
         />
 
-        {/* ================= 3. WATERMARK EMBLEM ================= */}
-        <div className="absolute bottom-6 right-6 lg:bottom-10 lg:right-12 pointer-events-none hidden md:flex items-center justify-center z-10">
-          <div className="relative flex items-center justify-center">
-            <div className="absolute w-36 h-36 rounded-full blur-xl bg-bg/85" />
-            <motion.div
-              animate={{ y: [-3, 3, -3], scale: [1, 1.03, 1] }}
-              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative flex items-center justify-center"
-            >
-              <img
-                src={theme.watermarkUrl ?? watermarkImg}
-                alt=""
-                aria-hidden="true"
-                className="w-24 h-24 lg:w-32 lg:h-32 object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.25)]"
-              />
-            </motion.div>
-          </div>
-        </div>
       </div>
 
-      <FloatingTechOrbit skills={skillBlocks.flatMap((block) => block.items)} />
+      <FloatingTechOrbit skills={skillBlocks.flatMap((block) => block.items)} watermarkUrl={theme.watermarkUrl} />
 
       {/* ================= 4. CONTENT LAYER ================= */}
       <div className="relative z-10 flex flex-col min-h-[100svh] w-full px-5 sm:px-8 lg:px-16 pt-5 pb-10">
