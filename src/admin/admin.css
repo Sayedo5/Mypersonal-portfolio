@@ -232,6 +232,7 @@
 }
 
 .ad-topbar {
+  position: relative;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -242,6 +243,52 @@
   background: color-mix(in srgb, var(--ad-surface) 88%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--ad-border);
+}
+
+.ad-mobile-more {
+  display: none;
+}
+
+.ad-topbar-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 14px;
+  z-index: 50;
+  display: grid;
+  min-width: 148px;
+  padding: 6px;
+  border: 1px solid var(--ad-border);
+  border-radius: var(--ad-radius-sm);
+  background: var(--ad-surface);
+  box-shadow: var(--ad-shadow-lg);
+}
+
+.ad-topbar-menu a,
+.ad-topbar-menu button {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--ad-radius-sm);
+  background: transparent;
+  color: var(--ad-text-soft);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ad-topbar-menu a:hover,
+.ad-topbar-menu button:hover {
+  background: var(--ad-surface-3);
+  color: var(--ad-text);
+}
+
+/* These controls inherit the grid display of .ad-icon-btn; keep their
+   responsive visibility explicit at the higher specificity they need. */
+.ad-icon-btn.ad-burger,
+.ad-icon-btn.ad-mobile-more {
+  display: none;
 }
 
 .ad-page-title {
@@ -885,7 +932,7 @@ a.ad-stat:hover {
     transform: translateX(0);
   }
 
-  .ad-burger {
+  .ad-icon-btn.ad-burger {
     display: grid;
   }
 
@@ -907,5 +954,23 @@ a.ad-stat:hover {
 
   .ad-topbar {
     padding: 10px 14px;
+  }
+
+  .ad-topbar-direct {
+    display: none;
+  }
+
+  .ad-icon-btn.ad-mobile-more {
+    display: grid;
+  }
+}
+
+@media (max-width: 560px) {
+  .ad-topbar .ad-chip {
+    display: none;
+  }
+
+  .ad-page-title {
+    font-size: 14px;
   }
 }

@@ -73,6 +73,7 @@ export const AdminShell: React.FC<{
   const location = useLocation();
   const { theme, toggle } = useAdminTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingDrafts, setPendingDrafts] = useState<number | null>(null);
@@ -95,6 +96,7 @@ export const AdminShell: React.FC<{
   }, [location.pathname, publishing]);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
+  useEffect(() => setQuickActionsOpen(false), [location.pathname]);
 
   const publishEverything = async () => {
     if (!window.confirm('Publish every pending draft across the whole site?')) return;
@@ -194,10 +196,10 @@ export const AdminShell: React.FC<{
               </span>
             )}
 
-            <a className="ad-btn" href="/preview" target="_blank" rel="noopener noreferrer">
+            <a className="ad-btn ad-topbar-direct" href="/preview" target="_blank" rel="noopener noreferrer">
               Preview
             </a>
-            <a className="ad-btn" href="/" target="_blank" rel="noopener noreferrer">
+            <a className="ad-btn ad-topbar-direct" href="/" target="_blank" rel="noopener noreferrer">
               View site
             </a>
 
@@ -214,7 +216,23 @@ export const AdminShell: React.FC<{
             <ActionButton tone="primary" onClick={publishEverything} loading={publishing}>
               Publish all
             </ActionButton>
-            <ActionButton onClick={() => void signOut()}>Sign out</ActionButton>
+            <ActionButton className="ad-topbar-direct" onClick={() => void signOut()}>Sign out</ActionButton>
+            <button
+              type="button"
+              className="ad-icon-btn ad-mobile-more"
+              aria-label="Open more actions"
+              aria-expanded={quickActionsOpen}
+              onClick={() => setQuickActionsOpen((open) => !open)}
+            >
+              ···
+            </button>
+            {quickActionsOpen && (
+              <div className="ad-topbar-menu">
+                <a href="/preview" target="_blank" rel="noopener noreferrer" onClick={() => setQuickActionsOpen(false)}>Preview</a>
+                <a href="/" target="_blank" rel="noopener noreferrer" onClick={() => setQuickActionsOpen(false)}>View site</a>
+                <button type="button" onClick={() => { setQuickActionsOpen(false); void signOut(); }}>Sign out</button>
+              </div>
+            )}
           </header>
 
           <main className="ad-content">
